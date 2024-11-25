@@ -2,3 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
+2020_presidential_election_cache
+
+.DS_Store
+gap_statistic.R
+
+old_code.R
+scratch.txt

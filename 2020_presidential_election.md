@@ -125,23 +125,6 @@ i.e.,**
 
 <!-- -->
 
-    ##     state              county                       candidate        party     
-    ##  Length:32177       Length:32177       Donald Trump      :4633   DEM    :4633  
-    ##  Class :character   Class :character   Jo Jorgensen      :4633   LIB    :4633  
-    ##  Mode  :character   Mode  :character   Joe Biden         :4633   REP    :4633  
-    ##                                        Write-ins         :3792   WRI    :3792  
-    ##                                        Howie Hawkins     :2994   IND    :3288  
-    ##                                        Rocky De La Fuente:1562   GRN    :3034  
-    ##                                        (Other)           :9930   (Other):8164  
-    ##   total_votes     
-    ##  Min.   :      0  
-    ##  1st Qu.:      3  
-    ##  Median :     34  
-    ##  Mean   :   4960  
-    ##  3rd Qu.:    745  
-    ##  Max.   :3028885  
-    ## 
-
     ##      candidate  county   state total_votes
     ## 1 Donald Trump Autauga Alabama       19838
     ## 2 Jo Jorgensen Autauga Alabama         350
@@ -188,15 +171,25 @@ group by state and county, compute total votes, and pct = votes/total as
 the proportion of votes. Then choose the highest row using top_n
 (variable state.winner is similar).**
 
+    ## # A tibble: 6 × 7
+    ##   state                county           candidate party total_votes  total   pct
+    ##   <chr>                <chr>            <fct>     <fct>       <dbl>  <dbl> <dbl>
+    ## 1 delaware             kent             Joe Biden DEM         44552  87025 0.512
+    ## 2 delaware             new castle       Joe Biden DEM        195034 287633 0.678
+    ## 3 delaware             sussex           Donald T… REP         71230 129352 0.551
+    ## 4 district of columbia district of col… Joe Biden DEM         39041  41681 0.937
+    ## 5 district of columbia ward 2           Joe Biden DEM         29078  32881 0.884
+    ## 6 district of columbia ward 3           Joe Biden DEM         39397  44231 0.891
+
     ## # A tibble: 6 × 5
     ##   state      candidate    party total_state_votes   pct
     ##   <chr>      <fct>        <fct>             <dbl> <dbl>
-    ## 1 Alabama    Donald Trump REP             1441168 0.620
-    ## 2 Alaska     Donald Trump REP              189892 0.485
-    ## 3 Arizona    Joe Biden    DEM             1672143 0.494
-    ## 4 Arkansas   Donald Trump REP              760647 0.624
-    ## 5 California Joe Biden    DEM            11109764 0.635
-    ## 6 Colorado   Joe Biden    DEM             1804352 0.554
+    ## 1 alabama    Donald Trump REP             1441168 0.620
+    ## 2 alaska     Donald Trump REP              189892 0.485
+    ## 3 arizona    Joe Biden    DEM             1672143 0.494
+    ## 4 arkansas   Donald Trump REP              760647 0.624
+    ## 5 california Joe Biden    DEM            11109764 0.635
+    ## 6 colorado   Joe Biden    DEM             1804352 0.554
 
 # Visualization
 
@@ -216,13 +209,13 @@ creating counties = map_data(“county”). Color by county.**
 
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
-**7. (6 pts) Now color the map by the winning candidate for each
-state.** First, combine states variable and state.winner we created
-earlier using left_join(). Note that left_join() needs to match up
-values of states to join the tables. A call to left_join() takes all the
-values from the first table and looks for matches in the second table.
-If it finds a match, it adds the data from the second table; if not, it
-adds missing values:
+Now color the map by the winning candidate for each state. First,
+combine states variable and state.winner we created earlier using
+left_join(). Note that left_join() needs to match up values of states to
+join the tables. A call to left_join() takes all the values from the
+first table and looks for matches in the second table. If it finds a
+match, it adds the data from the second table; if not, it adds missing
+values:
 
 Here, we’ll be combing the two data sets based on state name. However,
 the state names in states and state.winner can be in different formats:
@@ -275,7 +268,7 @@ cali_map <- ggplot(california_combined, aes(x = long, y = lat, fill = candidate_
   ggtitle("Heat Map of Candidates in California Counties")
 
 # Print the plot
-print(cali_map)
+cali_map
 ```
 
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
@@ -385,213 +378,11 @@ component.
     ## 5 7.066e-15
     ## 6 1.986e-15
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
-
-PCA for specific states. Boxplot for each state.
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-2.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-3.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-4.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-5.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-6.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-7.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-8.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-49-9.png)<!-- -->
-
-Boxplot for each state and outliers of each state
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-1.png)<!-- -->
-
-    ## Outliers for state Alabama in group 1 : -7.028 -6.842 
-    ## Outliers for state Alaska in group 1 : -6.834 
-    ## No outliers for state Arizona in group 1 
-    ## Outliers for state Arkansas in group 1 : -4.33 -4.532 -5.399 
-    ## No outliers for state California in group 1 
-    ## Outliers for state Colorado in group 1 : -3.436 -3.536
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-2.png)<!-- -->
-
-    ## No outliers for state Connecticut in group 2 
-    ## No outliers for state Delaware in group 2 
-    ## No outliers for state District of Columbia in group 2 
-    ## No outliers for state Florida in group 2 
-    ## Outliers for state Georgia in group 2 : -7.037 3.932 3.269 -6.357 
-    ## Outliers for state Hawaii in group 2 : -0.7306
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-3.png)<!-- -->
-
-    ## No outliers for state Idaho in group 3 
-    ## Outliers for state Illinois in group 3 : -4.569 2.953 -2.552 3.325 -1.983 
-    ## Outliers for state Indiana in group 3 : 3.687 4.388 
-    ## Outliers for state Iowa in group 3 : 4.15 
-    ## Outliers for state Kansas in group 3 : -1.481 -1.757 -2.381 
-    ## Outliers for state Kentucky in group 3 : -4.82 3.652 -4.404
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-4.png)<!-- -->
-
-    ## Outliers for state Louisiana in group 4 : -6.321 -5.503 1.402 -5.613 
-    ## No outliers for state Maine in group 4 
-    ## No outliers for state Maryland in group 4 
-    ## Outliers for state Massachusetts in group 4 : -0.5764 
-    ## Outliers for state Michigan in group 4 : 3.015 
-    ## Outliers for state Minnesota in group 4 : -0.3466 4.485 -2.335 -0.06703
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-5.png)<!-- -->
-
-    ## Outliers for state Mississippi in group 5 : -7.795 -7.902 
-    ## Outliers for state Missouri in group 5 : -3.501 -3.142 
-    ## Outliers for state Montana in group 5 : -3.07 -2.743 6.938 -3.053 6.467 -3.298 
-    ## Outliers for state Nebraska in group 5 : 5.346 5.466 5.184 -1.01 6.513 7.1 -3.078 5.07 
-    ## No outliers for state Nevada in group 5 
-    ## Outliers for state New Hampshire in group 5 : 0.8436 4.013
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-6.png)<!-- -->
-
-    ## No outliers for state New Jersey in group 6 
-    ## Outliers for state New Mexico in group 6 : 1.73 4.83 -5.512 
-    ## Outliers for state New York in group 6 : -3.839 3.758 3.425 3.351 
-    ## No outliers for state North Carolina in group 6 
-    ## Outliers for state North Dakota in group 6 : -2.261 -3.335 -5.435 6.017 
-    ## Outliers for state Ohio in group 6 : 4.585
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-7.png)<!-- -->
-
-    ## No outliers for state Oklahoma in group 7 
-    ## No outliers for state Oregon in group 7 
-    ## Outliers for state Pennsylvania in group 7 : 3.795 -2.349 3.519 -2.218 
-    ## Outliers for state Rhode Island in group 7 : -0.268 
-    ## No outliers for state South Carolina in group 7 
-    ## Outliers for state South Dakota in group 7 : -3.17 -6.226 -3.905 -3.246 -2.945 -8.499 -6.166 -3.302
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-8.png)<!-- -->
-
-    ## Outliers for state Tennessee in group 8 : -3.802 4.786 2.036 
-    ## Outliers for state Texas in group 8 : 3.118 4.263 -6.93 -4.602 3.407 -4.331 -4.934 -4.615 2.993 -4.384 -5.569 -5.781 -4.29 3.295 3.8 -5.103 3.684 3.078 -6.145 -4.386 -5.928 -5.958 -5.188 
-    ## Outliers for state Utah in group 8 : 3.412 -2.208 4.582 
-    ## Outliers for state Vermont in group 8 : 0.4001 
-    ## Outliers for state Virginia in group 8 : 5.866 -5.24 5.839 
-    ## No outliers for state Washington in group 8
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-50-9.png)<!-- -->
-
-    ## Outliers for state West Virginia in group 9 : -4.418 2.121 
-    ## Outliers for state Wisconsin in group 9 : -5.77 -0.9145 
-    ## No outliers for state Wyoming in group 9 
-    ## Outliers for state Puerto Rico in group 9 : -4 -2.908 -3.962
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
-
-    ## Outliers for state Alabama in group 1 : -7.028 -6.842 
-    ## Outlier indices for state Alabama in group 1 : 32 53 
-    ## Outliers for state Alaska in group 1 : -6.834 
-    ## Outlier indices for state Alaska in group 1 : 15 
-    ## No outliers for state Arizona in group 1 
-    ## Outliers for state Arkansas in group 1 : -4.33 -4.532 -5.399 
-    ## Outlier indices for state Arkansas in group 1 : 21 39 54 
-    ## No outliers for state California in group 1 
-    ## Outliers for state Colorado in group 1 : -3.436 -3.536 
-    ## Outlier indices for state Colorado in group 1 : 13 14
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-2.png)<!-- -->
-
-    ## No outliers for state Connecticut in group 2 
-    ## No outliers for state Delaware in group 2 
-    ## No outliers for state District of Columbia in group 2 
-    ## No outliers for state Florida in group 2 
-    ## Outliers for state Georgia in group 2 : -7.037 3.932 3.269 -6.357 
-    ## Outlier indices for state Georgia in group 2 : 30 58 108 128 
-    ## Outliers for state Hawaii in group 2 : -0.7306 
-    ## Outlier indices for state Hawaii in group 2 : 1
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-3.png)<!-- -->
-
-    ## No outliers for state Idaho in group 3 
-    ## Outliers for state Illinois in group 3 : -4.569 2.953 -2.552 3.325 -1.983 
-    ## Outlier indices for state Illinois in group 3 : 2 22 35 67 77 
-    ## Outliers for state Indiana in group 3 : 3.687 4.388 
-    ## Outlier indices for state Indiana in group 3 : 6 29 
-    ## Outliers for state Iowa in group 3 : 4.15 
-    ## Outlier indices for state Iowa in group 3 : 25 
-    ## Outliers for state Kansas in group 3 : -1.481 -1.757 -2.381 
-    ## Outlier indices for state Kansas in group 3 : 31 88 105 
-    ## Outliers for state Kentucky in group 3 : -4.82 3.652 -4.404 
-    ## Outlier indices for state Kentucky in group 3 : 74 93 119
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-4.png)<!-- -->
-
-    ## Outliers for state Louisiana in group 4 : -6.321 -5.503 1.402 -5.613 
-    ## Outlier indices for state Louisiana in group 4 : 18 33 52 54 
-    ## No outliers for state Maine in group 4 
-    ## No outliers for state Maryland in group 4 
-    ## Outliers for state Massachusetts in group 4 : -0.5764 
-    ## Outlier indices for state Massachusetts in group 4 : 7 
-    ## Outliers for state Michigan in group 4 : 3.015 
-    ## Outlier indices for state Michigan in group 4 : 47 
-    ## Outliers for state Minnesota in group 4 : -0.3466 4.485 -2.335 -0.06703 
-    ## Outlier indices for state Minnesota in group 4 : 4 10 44 53
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-5.png)<!-- -->
-
-    ## Outliers for state Mississippi in group 5 : -7.795 -7.902 
-    ## Outlier indices for state Mississippi in group 5 : 11 26 
-    ## Outliers for state Missouri in group 5 : -3.501 -3.142 
-    ## Outlier indices for state Missouri in group 5 : 67 78 
-    ## Outliers for state Montana in group 5 : -3.07 -2.743 6.938 -3.053 6.467 -3.298 
-    ## Outlier indices for state Montana in group 5 : 2 3 17 18 35 43 
-    ## Outliers for state Nebraska in group 5 : 5.346 5.466 5.184 -1.01 6.513 7.1 -3.078 5.07 
-    ## Outlier indices for state Nebraska in group 5 : 4 5 8 22 52 58 87 92 
-    ## No outliers for state Nevada in group 5 
-    ## Outliers for state New Hampshire in group 5 : 0.8436 4.013 
-    ## Outlier indices for state New Hampshire in group 5 : 4 8
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-6.png)<!-- -->
-
-    ## No outliers for state New Jersey in group 6 
-    ## Outliers for state New Mexico in group 6 : 1.73 4.83 -5.512 
-    ## Outlier indices for state New Mexico in group 6 : 12 16 18 
-    ## Outliers for state New York in group 6 : -3.839 3.758 3.425 3.351 
-    ## Outlier indices for state New York in group 6 : 3 31 40 46 
-    ## No outliers for state North Carolina in group 6 
-    ## Outliers for state North Dakota in group 6 : -2.261 -3.335 -5.435 6.017 
-    ## Outlier indices for state North Dakota in group 6 : 3 40 43 44 
-    ## Outliers for state Ohio in group 6 : 4.585 
-    ## Outlier indices for state Ohio in group 6 : 21
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-7.png)<!-- -->
-
-    ## No outliers for state Oklahoma in group 7 
-    ## No outliers for state Oregon in group 7 
-    ## Outliers for state Pennsylvania in group 7 : 3.795 -2.349 3.519 -2.218 
-    ## Outlier indices for state Pennsylvania in group 7 : 15 27 46 51 
-    ## Outliers for state Rhode Island in group 7 : -0.268 
-    ## Outlier indices for state Rhode Island in group 7 : 4 
-    ## No outliers for state South Carolina in group 7 
-    ## Outliers for state South Dakota in group 7 : -3.17 -6.226 -3.905 -3.246 -2.945 -8.499 -6.166 -3.302 
-    ## Outlier indices for state South Dakota in group 7 : 3 8 15 20 47 51 60 66
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-8.png)<!-- -->
-
-    ## Outliers for state Tennessee in group 8 : -3.802 4.786 2.036 
-    ## Outlier indices for state Tennessee in group 8 : 48 94 95 
-    ## Outliers for state Texas in group 8 : 3.118 4.263 -6.93 -4.602 3.407 -4.331 -4.934 -4.615 2.993 -4.384 -5.569 -5.781 -4.29 3.295 3.8 -5.103 3.684 3.078 -6.145 -4.386 -5.928 -5.958 -5.188 
-    ## Outlier indices for state Texas in group 8 : 6 17 24 31 43 55 64 66 87 108 115 124 131 135 151 162 197 199 214 240 245 253 254 
-    ## Outliers for state Utah in group 8 : 3.412 -2.208 4.582 
-    ## Outlier indices for state Utah in group 8 : 15 19 22 
-    ## Outliers for state Vermont in group 8 : 0.4001 
-    ## Outlier indices for state Vermont in group 8 : 5 
-    ## Outliers for state Virginia in group 8 : 5.866 -5.24 5.839 
-    ## Outlier indices for state Virginia in group 8 : 7 104 106 
-    ## No outliers for state Washington in group 8
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-51-9.png)<!-- -->
-
-    ## Outliers for state West Virginia in group 9 : -4.418 2.121 
-    ## Outlier indices for state West Virginia in group 9 : 24 40 
-    ## Outliers for state Wisconsin in group 9 : -5.77 -0.9145 
-    ## Outlier indices for state Wisconsin in group 9 : 40 41 
-    ## No outliers for state Wyoming in group 9 
-    ## Outliers for state Puerto Rico in group 9 : -4 -2.908 -3.962 
-    ## Outlier indices for state Puerto Rico in group 9 : 25 32 71
-
 **12. (2 pts) Determine the number of minimum number of PCs needed to
 capture 90% of the variance for the analysis.** (2 pts) Plot proportion
 of variance explained (PVE) and cumulative PVE.
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-53-1.png)<!-- -->
-
-    ## [1] 12
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
 
 We need about 12 PCs in order to explain 90% of the total variation in
 the data.
@@ -617,10 +408,6 @@ Below is census.clean (with State and County excluded):
 
 Below is using the first 2 principal components:
 
-``` r
-census_transform <- as.data.frame(pc.county)
-```
-
     ## clus_new
     ##    1    2    3    4    5    6    7    8    9   10 
     ## 1022 1070   93   89  103  392   16    1  416   17
@@ -643,9 +430,7 @@ entirely**
 
 ### The Elbow Method
 
-### The Average Silhouette Method
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
 
 # Classification
 
@@ -686,9 +471,44 @@ records object. (2 pts) Interpret and discuss the results of the
 decision tree analysis. (2 pts) Use this plot to tell a story about
 voting behavior.
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-72-1.png)<!-- -->
+Decision Tree purity
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-75-1.png)<!-- -->
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-66-1.png)<!-- -->
+
+``` r
+cv_data <- data.frame(
+  size = cv.election$size,
+  error = cv.election$dev
+)
+
+# Create the plot
+ggplot(cv_data, aes(x = size, y = error)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 3) +
+  theme_minimal() +
+  labs(
+    title = "Cross-Validation Error vs Tree Size",
+    x = "Tree Size",
+    y = "Cross-Validation Error"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    panel.grid.minor = element_blank()
+  ) +
+  scale_x_continuous(breaks = unique(cv_data$size)) +  # Show all tree sizes on x-axis
+  geom_point(
+    data = cv_data[which.min(cv_data$error), ],
+    aes(x = size, y = error),
+    color = "red",
+    size = 4
+  )  # Highlight the minimum error point
+```
+
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
 
 **Both trees have Transit first followed by White and Women. Before
 pruning, White was right below Women, but in after pruning, White is at
@@ -713,10 +533,32 @@ consistent with what you saw in decision tree analysis? (2 pts)
 Interpret the meaning of a couple of the significant coefficients in
 terms of a unit change in the variables.
 
-    ##               true
-    ## pred           Donald Trump Joe Biden
-    ##   Donald Trump          484        25
-    ##   Joe Biden              18        75
+For interpretable machine learning
+
+    ##                    Estimate Std. Error  z value  Pr(>|z|)
+    ## (Intercept)      -3.614e+01  9.596e+00 -3.76657 1.655e-04
+    ## Men               7.494e-02  5.092e-02  1.47177 1.411e-01
+    ## White            -1.749e-01  6.947e-02 -2.51787 1.181e-02
+    ## Minority         -3.736e-02  6.800e-02 -0.54948 5.827e-01
+    ## VotingAgeCitizen  1.898e-01  2.722e-02  6.97507 3.057e-12
+    ## Income           -7.805e-06  1.639e-05 -0.47627 6.339e-01
+    ## Poverty           3.148e-02  4.325e-02  0.72786 4.667e-01
+    ## ChildPoverty      1.439e-02  2.533e-02  0.56830 5.698e-01
+    ## Professional      3.294e-01  3.855e-02  8.54408 1.296e-17
+    ## Service           3.718e-01  4.828e-02  7.69947 1.366e-14
+    ## Office            1.543e-01  4.692e-02  3.28830 1.008e-03
+    ## Production        1.899e-01  4.179e-02  4.54413 5.516e-06
+    ## Drive            -1.997e-01  4.951e-02 -4.03271 5.514e-05
+    ## Carpool          -1.855e-01  6.089e-02 -3.04697 2.312e-03
+    ## Transit           5.373e-02  1.001e-01  0.53708 5.912e-01
+    ## OtherTransp      -2.734e-03  1.035e-01 -0.02642 9.789e-01
+    ## WorkAtHome       -5.869e-02  7.187e-02 -0.81668 4.141e-01
+    ## MeanCommute       5.043e-02  2.382e-02  2.11710 3.425e-02
+    ## Employed          2.865e-01  3.425e-02  8.36541 5.991e-17
+    ## PrivateWork       1.008e-01  2.170e-02  4.64750 3.360e-06
+    ## SelfEmployed      8.590e-04  4.509e-02  0.01905 9.848e-01
+    ## FamilyWork       -4.964e-01  2.901e-01 -1.71091 8.710e-02
+    ## Unemployment      2.799e-01  5.037e-02  5.55713 2.743e-08
 
 Below are the significant variables:
 
@@ -757,16 +599,39 @@ The optimal value of $\lambda$ in cross validation is 0.0011.
 Below are the non-zero coefficients in the LASSO regression for the
 optimal value of λ:
 
-    ##              Men            Women            White VotingAgeCitizen 
-    ##                1                2                3                5 
-    ##          Poverty     Professional          Service           Office 
-    ##                7                9               10               11 
-    ##       Production            Drive          Carpool          Transit 
-    ##               12               13               14               15 
-    ##      OtherTransp      MeanCommute         Employed      PrivateWork 
-    ##               16               18               19               20 
-    ##     SelfEmployed       FamilyWork     Unemployment 
-    ##               21               22               23
+    ##      (Intercept)              Men            Women            White 
+    ##       -3.446e+01        2.584e-02       -8.838e-15       -1.260e-01 
+    ## VotingAgeCitizen          Poverty     Professional          Service 
+    ##        1.791e-01        4.838e-02        2.679e-01        3.054e-01 
+    ##           Office       Production            Drive          Carpool 
+    ##        1.075e-01        1.301e-01       -1.424e-01       -1.200e-01 
+    ##          Transit      OtherTransp      MeanCommute         Employed 
+    ##        1.036e-01        3.025e-02        2.831e-02        2.457e-01 
+    ##      PrivateWork     SelfEmployed       FamilyWork     Unemployment 
+    ##        8.855e-02       -1.517e-02       -4.299e-01        2.456e-01
+
+``` r
+set.seed(20)
+
+# Predict probabilities for training and test datasets
+prob.training <- predict(lasso.model, type = "response", s = bestlam, newx = x.train)
+prob.test <- predict(lasso.model, type = "response", s = bestlam, newx = x.test)
+
+# Generate predictions using majority rule
+majority_rule <- 0.5
+pred_training <- ifelse(prob.training > majority_rule, "Joe Biden", "Donald Trump")
+pred_test <- ifelse(prob.test > majority_rule, "Joe Biden", "Donald Trump")
+```
+
+``` r
+# Training set confusion matrix and error calculation
+training_pred_table <- table(Predicted = pred_training, True = election.tr$candidate)
+percent_train <- sum(diag(training_pred_table)) / nrow(election.tr) * 100
+
+# Test set confusion matrix and error calculation
+test_pred_table <- table(Predicted = pred_test, True = election.te$candidate)
+percent_test <- sum(diag(test_pred_table)) / nrow(election.te) * 100
+```
 
 Unpenalized logistic regression: When taking their absolute values,
 Women and Income had low coefficients compared to the rest of the
@@ -786,7 +651,7 @@ classification results, discuss the pros and cons of the various
 methods. (2 pts) Are the different classifiers more appropriate for
 answering different kinds of questions about the election?
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-94-1.png)<!-- -->
+![](2020_presidential_election_files/figure-gfm/before-random-1.png)<!-- -->
 
 **Answer:**
 
@@ -804,15 +669,110 @@ the tree method, logistic regression, and the lasso logistic regression?
 
 ### Random Forest
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-99-1.png)<!-- -->
+### Neural Net
 
-### Boosting
+    ## Loading required package: foreach
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-104-1.png)<!-- -->
+    ## 
+    ## Attaching package: 'foreach'
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-105-1.png)<!-- -->
+    ## The following objects are masked from 'package:purrr':
+    ## 
+    ##     accumulate, when
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-106-1.png)<!-- -->
+    ## Loading required package: iterators
+
+``` r
+# Storing Error Rates
+a <- calc_error_rate(as.factor(train_pred), election.tr$candidate)
+b <- calc_error_rate(as.factor(test_pred), election.te$candidate)
+records[5,] <- c(a,b)
+
+roc_pred_nn <- prediction(
+    predictions = test_pred_prob,
+    labels = election.te$candidate #as.factor(election.te$candidate, levels = c("Donald Trump", "Joe Biden"))
+)
+
+roc_perf_nn <- performance(roc_pred_nn, measure = "tpr", x.measure = "fpr")
+```
+
+``` r
+# Modify factor levels to be valid R names
+election.tr$candidate <- factor(election.tr$candidate,
+                              levels = c("Donald Trump", "Joe Biden"),
+                              labels = c("Donald_Trump", "Joe_Biden"))
+
+election.te$candidate <- factor(election.te$candidate,
+                              levels = c("Donald Trump", "Joe Biden"),
+                              labels = c("Donald_Trump", "Joe_Biden"))
+
+# Setup parallel processing
+num_cores <- availableCores(omit = 1)  # Leave one core free
+cl <- makeCluster(num_cores)
+registerDoParallel(cl)
+
+# Create training control object
+ctrl <- trainControl(
+  method = "cv",
+  number = 10,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary,
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# Define grid of hyperparameters
+grid <- expand.grid(
+  size = c(3, 5, 7, 10, 13),
+  decay = c(0.001, 0.01, 0.1, 0.3, 0.5)
+)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Train model with grid search
+nnet_optimal <- train(
+  x = X_train_scaled,
+  y = election.tr$candidate,
+  method = "nnet",
+  metric = "ROC",
+  trControl = ctrl,
+  tuneGrid = grid,
+  trace = FALSE,
+  maxit = 1000,
+  linout = FALSE,
+  MaxNWts = 1000
+)
+```
+
+    ## Aggregating results
+    ## Selecting tuning parameters
+    ## Fitting size = 7, decay = 0.5 on full training set
+
+    ## Warning: Setting row names on a tibble is deprecated.
+
+``` r
+# Stop parallel processing
+stopCluster(cl)
+
+
+# Make predictions with optimal model
+train_pred_prob <- predict(nnet_optimal, X_train_scaled, type = "prob")[,"Joe_Biden"]
+test_pred_prob <- predict(nnet_optimal, X_test_scaled, type = "prob")[,"Joe_Biden"]
+
+# Calculate error rates
+train_pred <- ifelse(train_pred_prob > 0.5, "Joe_Biden", "Donald_Trump")
+test_pred <- ifelse(test_pred_prob > 0.5, "Joe_Biden", "Donald_Trump")
+```
+
+``` r
+# Plot tuning results
+plot(nnet_optimal)
+```
+
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-93-1.png)<!-- -->
+
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-95-1.png)<!-- -->
 
 **Answer:**
 
@@ -896,61 +856,3 @@ GOP](https://www.csmonitor.com/USA/Politics/2022/1021/The-new-swing-vote-Why-mor
 
 [The Latino vote shifted toward Republicans in 2020. Will it
 again?](https://www.washingtonpost.com/politics/interactive/2022/election-2022-latino-voters/)
-
-**21. (9 pts) (Open ended) Interpret and discuss any overall insights
-gained in this analysis and possible explanations.** Use any tools at
-your disposal to make your case: visualize errors on the map, discuss
-what does/doesn’t seems reasonable based on your understanding of these
-methods, propose possible directions (collecting additional data, domain
-knowledge, etc).
-
-[corr_simple()](https://towardsdatascience.com/how-to-create-a-correlation-matrix-with-too-many-variables-309cc0c0a57)
-
-**Answer:**
-
-**In our state map, NA is included are one of our candidates**
-
-**There is a VIF chart and a correlation matrix. The author of the
-correlation matrix is [Catherine
-Williams](https://towardsdatascience.com/how-to-create-a-correlation-matrix-with-too-many-variables-309cc0c0a57).**
-
-**Using the VIF, we can there are 9 variables that exceed the 5
-threshold. It would be beneficial to remove Income, Poverty,
-ChildPoverty, Professional, and Drive due to high multicollinearity**
-
-**If we want more variables, I believe it would be ideal to consider
-what percent each county/state are married. Do this for both men and
-women. I think we should consider if there has been a decrease in the
-workforce among men for each county/state. We should also consider if
-there has been a decrease in higher ed among men in each county/state.**
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax
-for authoring HTML, PDF, and MS Word documents. For more details on
-using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that
-includes both content as well as the output of any embedded R code
-chunks within the document. You can embed an R code chunk like this:
-
-``` r
-summary(cars)
-```
-
-    ##      speed           dist    
-    ##  Min.   : 4.0   Min.   :  2  
-    ##  1st Qu.:12.0   1st Qu.: 26  
-    ##  Median :15.0   Median : 36  
-    ##  Mean   :15.4   Mean   : 43  
-    ##  3rd Qu.:19.0   3rd Qu.: 56  
-    ##  Max.   :25.0   Max.   :120
-
-## Including Plots
-
-You can also embed plots, for example:
-
-![](2020_presidential_election_files/figure-gfm/pressure-1.png)<!-- -->
-
-Note that the `echo = FALSE` parameter was added to the code chunk to
-prevent printing of the R code that generated the plot.
