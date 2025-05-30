@@ -1,0 +1,728 @@
+---
+title: "Analysis of the 2020 Presidential Election"
+author: "Alexander Sanchez"
+date: "2030-01-01"
+output: github_document
+---
+
+
+```{r setup, echo=FALSE, include=FALSE}
+# install.packages("arulesViz")
+library(knitr)
+library(ISLR) 
+library(tree)
+library(maptree)
+library(randomForest) 
+library(gbm) 
+library(glmnet) 
+library(caret)
+library(psych)
+library(boot)
+library(tidyverse)
+library(corrplot)
+library(FactoMineR)
+library(dbplyr)
+library(ROCR) 
+library(ggridges) 
+library(dendextend) 
+library(e1071)
+library(maps)
+library(utils)
+library(car)
+library(factoextra)
+library(Matrix)
+library(arules)
+library(cluster)
+library(arulesViz)
+#update.packages()
+# set global chunk options: images will be 8x5 inches
+knitr::opts_chunk$set(fig.width=8, fig.height=5)
+options(digits = 4)
+
+
+## indents are for indenting r code as formatted text
+## They may need to be adjusted depending on your OS
+# if your output looks odd, increase or decrease indent
+indent1 = '    '
+indent2 = '        '
+indent3 = '            '
+```
+
+
+
+# Instructions and Expectations
+
+
+Predicting voter behavior is complicated for many reasons despite the tremendous effort in collecting, cleaning, analyzing, and understanding many available datasets. As the midterm elections in the United States is currently being held near the midpoint of the current president’s four-year term of office, it is a good time for us to review the 2020 United States presidential election data! Despite that the 2016 presidential election came as a big surprise to many, Biden’s victory in the 2020 presidential election has been widely predicted (e.g., see the well-known Nate Silver in FiveThirtyEight).
+
+
+# Data
+
+We will start the analysis with two data sets. The first one is the election data, which is drawn from here. The data contains county-level election results.
+
+The second dataset is the 2017 United States county-level census data, which is available here.
+
+The following code load in these two data sets: `election.raw` and `census.`
+
+```{r message=FALSE, echo=FALSE}
+## read data and convert candidate names and party names from string to factor
+## we manually remove the variable "won", the indicator of county level winner
+## In Problem 5 we will reproduce this variable!
+election.raw <- read_csv("data/raw/candidates_county.csv", col_names = TRUE) %>% 
+  mutate(candidate = as.factor(candidate), party = as.factor(party), won = NULL)
+
+
+## remove the word "County" from the county names
+words.to.remove = c("County")
+remove.words <- function(str, words.to.remove){
+  sapply(str, function(str){
+    x <- unlist(strsplit(str, " "))
+    x <- x[!x %in% words.to.remove]
+    return(paste(x, collapse = " "))
+  }, simplify = "array", USE.NAMES = FALSE)
+}
+election.raw$county <- remove.words(election.raw$county, words.to.remove)
+
+
+## read census data
+census <- read_csv("data/raw/census_county.csv") 
+```
+
+# Exploratory Data Analysis
+
+## Election Data
+
+**1.  (1 pts) Compute the total number of distinct values in state in election.raw to verify that the data contains all states and a federal district**
+
+The following is the first few rows of the `election.raw` data.
+
+```{r echo=FALSE}
+head(election.raw)
+```
+
+Checking dimensions of `election.raw` data set.
+```{r echo=FALSE}
+dim(election.raw)
+```
+
+Checking for missing values in `election.raw` data set. 
+```{r echo=FALSE}
+ifelse(sum(is.na(election.raw)) == 0 , "There are no missing values", "There are missing values")
+```
+
+Checking unique vlaues for each column
+```{r echo=FALSE}
+sapply(election.raw, function(x) n_distinct(x))
+```
+
+
+```{r echo=FALSE}
+unique_counties_per_state <- election.raw %>%
+  distinct(state, county) %>%
+  arrange(state, county)
+```
+
+## Census data
+
+The following is the first few rows of the `census` data. The column names are all very self-explanatory:
+
+```{r echo=FALSE}
+head(census)
+```
+
+**2. (1 pts) Report the dimension of `census`. (1 pts) Are there missing values in the data set? (1 pts) Compute the total number of distinct values in `county` in `census`. (1 pts) Compare the values of total number of distinct county in `census` with that in `election.raw`. (1 pts) Comment on your findings.**
+
+Checking dimensions of `census` data set.
+```{r echo=FALSE}
+dim(census)
+```
+
+Checking for missing values in `census` data set.
+```{r echo=FALSE}
+ifelse(sum(is.na(census)) == 0 , "There are no missing values", "There are missing values")
+```
+
+
+Which column has missing values?
+```{r echo=FALSE}
+column_missing <- colSums(is.na(census))
+print(column_missing[column_missing > 0])
+```
+
+
+
+```{r echo=FALSE}
+sapply(census, function(x) n_distinct(x))[3]
+```
+There are more distinct counties in `election.raw` than in `census`. Grouping them by state and county (some states have the same county names), `census` has around 3,220 counties, while `election.raw` has 4,633 counties. Upon closer examination of state and county, we see that some counties are named differently despite being from the same state county. Also, `census` has one more state than `election.raw` since `census` includes Puerto Rico.
+
+```{r echo=FALSE}
+unique_counties_per_state <- census %>%
+  distinct(CountyId) %>%
+  arrange(CountyId)
+```
+
+# Data Wrangling
+
+**3. (4 pts) Construct aggregated data sets from election.raw data: i.e.,**
+
+* Keep the county-level data as it is in election.raw.
+* Create a state-level summary into a election.state.
+* Create a federal-level summary into a election.total.
+
+```{r echo=FALSE, cache=TRUE}
+election.state <- aggregate(total_votes~candidate+county+state, election.raw,
+                FUN = sum)
+# election.state <- election.raw %>% group_by(candidate, county, state) %>% summarise(total_votes = sum(total_votes), .groups = 'drop')
+head(election.state)
+```
+
+```{r echo=FALSE, cache=TRUE}
+election.total <- aggregate(total_votes~candidate + state,election.raw,
+                FUN = sum)
+# election.raw %>% group_by(candidate) %>% summarise(total_votes = sum(total_votes), .groups = 'drop')
+head(election.total)
+```
+
+**4. (1 pts) How many named presidential candidates were there in the 2020 election? (2 pts) Draw a bar chart of all votes received by each candidate. You can split this into multiple plots or may prefer to plot the results on a log scale. Either way, the results should be clear and legible! (For fun: spot Kanye West among the presidential candidates!)**
+
+There were about `r n_distinct((election.total$candidate)) - 2` presidential candidates in the 2020 election, not counting write-ins and none of these candidates.
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+# Exclude 'Write-in' and 'None of these candidates' from the count
+named_candidates <- election.total %>% 
+  filter(candidate != "Write-in" & candidate != "None of these candidates") %>% 
+  distinct(candidate)
+
+num_named_candidates <- n_distinct(named_candidates$candidate)
+
+cat("There were", num_named_candidates, "named presidential candidates in the 2020 election.\n")
+
+```
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+votes_per_candidate <- election.total %>%
+  group_by(candidate) %>%
+  summarise(total_votes = sum(total_votes)) %>%
+  arrange(desc(total_votes))
+
+head(votes_per_candidate)
+```
+
+```{r echo=FALSE}
+library(ggplot2)
+library(dplyr)
+
+# Assuming votes_per_candidate is already created as mentioned in the previous steps
+# and y_max is calculated.
+y_max <- max(votes_per_candidate$total_votes)
+
+# Split the dataset into chunks of 5 candidates each
+chunk_size <- 5
+splits <- split(votes_per_candidate, (seq(nrow(votes_per_candidate)) - 1) %/% chunk_size)
+
+# Plot each chunk with the same y scale and adjust text settings
+plot_list <- lapply(seq_along(splits), function(i) {
+  chunk <- splits[[i]]
+  ggplot(chunk, aes(x=reorder(candidate, -total_votes), y=total_votes)) +
+    geom_bar(stat="identity") +
+    scale_y_continuous(trans='log10', limits=c(1, y_max)) +  # set limits
+    theme(axis.text.x = element_text(angle=90, hjust=1, size=10),  # x-axis text
+          axis.text.y = element_text(size=10)) +  # y-axis text
+    labs(x="Candidate", y="Total Votes (log scale)") +
+    # ggtitle(paste("Plot", i)) +  # Add a title for each plot
+    theme_minimal()
+})
+
+# Print each plot individually
+for (plot in plot_list) {
+  print(plot)
+}
+```
+
+**5. (6 pts) Create data sets county.winner and state.winner by taking the candidate with the highest proportion of votes in both county level and state level. Hint: to create county.winner, start with election.raw, group by state and county, compute total votes, and pct = votes/total as the proportion of votes. Then choose the highest row using top_n (variable state.winner is similar).**
+
+
+```{r echo=FALSE, error=FALSE, message=FALSE}
+county.winner <- election.raw %>%
+  mutate_at(vars(state, county), tolower) %>%
+  mutate(county = gsub(" county| parish", "", county)) %>% # removes county or parish
+  mutate(county = gsub(" cty| plt", "", county)) %>%
+  mutate(county = gsub(" townships| townshps", "", county)) %>%
+  mutate(county = gsub(" township| pt", "", county)) %>%
+  mutate(county = gsub("[.]", "", county)) %>% # removes periods
+  group_by(state, county) %>% # Some states have the same county name. This will differentiate between counties in different states
+  mutate(total = sum(total_votes)) %>%
+  mutate(pct = total_votes / total) %>%
+  top_n(1,pct) %>%
+  ungroup()
+
+head(county.winner)
+```
+
+
+
+```{r echo=FALSE, error=FALSE, message=FALSE}
+state.winner <- election.raw %>%
+  mutate_at(vars(state, county), tolower) %>%
+  group_by(state, candidate, party) %>%
+  summarise(total_state_votes = sum(total_votes)) %>%
+  ungroup() %>%
+  group_by(state) %>%
+  mutate(total_votes_state = sum(total_state_votes)) %>%
+  mutate(pct = total_state_votes / total_votes_state) %>%
+  top_n(1, pct) %>%
+  ungroup() %>%
+  select(state, candidate, party, total_state_votes, pct)
+
+# election.raw %>% select(state, county) %>% distinct()
+
+head(state.winner)
+```
+
+# Visualization
+
+Visualization is crucial for gaining insight and intuition during data mining. We will map our data onto maps.
+
+The R package ggplot2 can be used to draw maps. Consider the following code.
+
+```{r  warning=FALSE, echo=FALSE}
+states <- map_data("state")
+
+ggplot(data = states) + 
+  geom_polygon(aes(x = long, y = lat, fill = region, group = group),
+               color = "white") + 
+  coord_fixed(1.3) +
+  theme_void() + # removes 
+  guides(fill=FALSE)  # color legend is unnecessary and takes too long
+```
+
+The variable states contain information to draw white polygons, and fill-colors are determined by region.
+
+**6. (4 pts) Use similar code to above to draw county-level map by creating counties = map_data("county"). Color by county.**
+
+```{r echo=FALSE}
+counties <- map_data("county") # head(counties)
+
+ggplot(data = counties) + 
+  geom_polygon(aes(x = long, y = lat, fill = region, group = group),
+               color = "white") + 
+  coord_fixed(1.3) +
+  theme_void() +
+  guides(fill=FALSE)  # color legend is unnecessary and takes too long
+```
+
+Now color the map by the winning candidate for each state. First, combine states variable and state.winner we created earlier using left_join(). Note that left_join() needs to match up values of states to join the tables. A call to left_join() takes all the values from the first table and looks for matches in the second table. If it finds a match, it adds the data from the second table; if not, it adds missing values:
+
+Here, we’ll be combing the two data sets based on state name. However, the state names in states and state.winner can be in different formats: check them! Before using left_join(), use certain transform to make sure the state names in the two data sets: states (for map drawing) and state.winner (for coloring) are in the same formats. Then left_join(). Your figure will look similar to New York Times map.
+.winner, state)
+
+```{r echo=FALSE}
+new_state <- states
+# new_state$region <- str_to_title(new_state$region)
+
+new_state <- new_state %>%
+  left_join(state.winner, # # state.winner %>% mutate(state = tolower(state))
+            by = c("region" = "state"))
+# new_state %>% filter(is.na(region))
+```
+
+
+```{r}
+counties
+county.winner
+```
+
+```{r echo=FALSE}
+# counties <- map_data("county") # head(counties)
+# Count the total number of missing values in the data frame
+sum(is.na(new_counties))
+unique(new_counties[!complete.cases(new_counties),]["region"])
+new_counties[!complete.cases(new_counties),]
+
+# color legend is unnecessary and takes too long
+```
+
+```{r}
+# Find counties that didn't match
+unmatched_counties <- new_counties %>%
+  filter(is.na(total_votes)) %>%  # or any column from county.winner
+  select(region, subregion) %>%
+  distinct()
+
+# See what we're missing
+head(unmatched_counties, 20)
+
+```
+
+
+### Drop Alaska
+
+```{r}
+# Get unique state-county combinations from each dataset
+counties_names <- counties %>%
+  select(region, subregion) %>%
+  distinct() %>%
+  arrange(region, subregion)
+
+county_winner_names <- county.winner %>%
+  select(state, county) %>%
+  distinct() %>%
+  arrange(state, county)
+
+county.winner[county.winner$state == "alaska", ]
+
+filter(counties_names, region == "alaska")
+
+filter(county.winner, state == "alaska")
+
+
+# Look at a specific state to compare naming differences
+state_to_check <- "alabama"  # or whatever state you want to examine
+
+counties_ca <- counties_names %>% filter(region == state_to_check)
+winner_ca <- county_winner_names %>% filter(state == state_to_check)
+
+# See the differences
+counties_ca
+winner_ca
+
+
+# Find counties in the map data but NOT in the election data
+in_counties_not_winner <- counties_names %>%
+  anti_join(county_winner_names, by = c("region" = "state", "subregion" = "county")) %>%
+  select(region, subregion)
+
+# Find counties in the election data but NOT in the map data  
+in_winner_not_counties <- county_winner_names %>%
+  anti_join(counties_names, by = c("state" = "region", "county" = "subregion")) %>%
+  select(state, county)
+
+# Display the results
+print("Counties in MAP data but not in ELECTION data:")
+print(in_counties_not_winner)
+
+print("Counties in ELECTION data but not in MAP data:")
+print(in_winner_not_counties)
+
+# Create a comparison dataframe
+max_length <- max(nrow(in_counties_not_winner), nrow(in_winner_not_counties))
+
+comparison <- data.frame(
+  map_only = c(in_counties_not_winner$region, in_counties_not_winner$subregion, 
+               rep(NA, max_length - nrow(in_counties_not_winner))),
+  election_only = c(in_winner_not_counties$state, in_winner_not_counties$county,
+                    rep(NA, max_length - nrow(in_winner_not_counties)))
+)
+
+print(comparison)
+
+```
+
+
+
+```{r echo=FALSE}
+ggplot(data = new_state) + 
+  geom_polygon(aes(x = long, y = lat, fill = candidate, group = group),
+               color = "white") + 
+  coord_fixed(1.3) +
+  theme_void() +
+  guides()  # color legend is unnecessary and takes too long
+```
+
+**8. (6 pts) Color the map of the state of California by the winning candidate for each county.**
+
+
+```{r echo=FALSE}
+counties <- map_data("county")
+new_counties <- counties
+
+new_counties <- new_counties %>%
+  left_join(county.winner,
+            by = c("region" = "state", "subregion" = "county"))
+
+new_winner <- county.winner %>%
+  left_join(counties,
+            by = c("state" = "region", "county" = "subregion"))
+```
+
+```{r echo=FALSE}
+# new_counties %>% filter(is.na(candidate))
+
+ggplot(data = new_winner) + 
+  geom_polygon(aes(x = long, y = lat, fill = candidate, group = group),
+               color = "white") + 
+  coord_fixed(1.3) +
+  scale_fill_manual(values = c("Joe Biden" = "blue", "Donald Trump" = "red")) +
+  theme_void() +
+  guides()  + # color legend is unnecessary and takes too long
+  ggtitle("Presidential Election in California")
+```
+
+
+```{r echo=FALSE}
+# new_counties %>% filter(is.na(candidate))
+california <- new_counties[which(new_counties$region == 'california'), ]
+ggplot(data = california) + 
+  geom_polygon(aes(x = long, y = lat, fill = candidate, group = group),
+               color = "white") + 
+  coord_fixed(1.3) +
+  scale_fill_manual(values = c("Joe Biden" = "blue", "Donald Trump" = "red")) +
+  theme_void() +
+  guides()  + # color legend is unnecessary and takes too long
+  ggtitle("Presidential Election in California")
+```
+
+**9. (4 pts) (Open-ended) Create a visualization of your choice using census data.** Many exit polls noted that demographics played a big role in the election. Use this Washington Post article and this R graph gallery for ideas and inspiration.
+
+
+```{r echo=FALSE, message=FALSE, warnings=FALSE}
+# Heat map
+cali_map <- ggplot(data = california) + 
+  geom_polygon(aes(x = long, y = lat, fill = candidate, alpha = pct, group = group), color = "white") + 
+  coord_fixed(1.3) +
+  scale_fill_manual(values = c("Joe Biden" = "blue", "Donald Trump" = "red")) +
+  scale_alpha_continuous(range = c(0.4, 1), guide = FALSE) + # Adjust alpha range for visibility
+  theme_minimal() +
+  labs(fill = "Candidate", alpha = "Vote %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Heat Map of Candidates California Counties")
+
+cali_map
+```
+
+```{r echo=FALSE}
+# Combine data into a single data frame
+# Ensure that `pct` is a continuous variable representing the percentage
+california_combined <- california %>%
+  mutate(candidate_pct = ifelse(candidate == "Joe Biden", pct, -pct))
+
+# Create the plot
+cali_map <- ggplot(california_combined, aes(x = long, y = lat, fill = candidate_pct, group = group)) + 
+  geom_polygon(color = "white") + 
+  coord_fixed(1.3) +
+  scale_fill_gradientn(colours = c("red", "white", "blue"), 
+                       values = scales::rescale(c(-1, 0, 1)), 
+                       breaks = c(-1, 0, 1),
+                       labels = c("Trump", "Neutral", "Biden"),
+                       limits = c(-1, 1),
+                       na.value = "transparent") +
+  theme_minimal() +
+  labs(fill = "Vote %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Heat Map of Candidates in California Counties")
+
+# Print the plot
+cali_map
+```
+
+
+```{r echo=FALSE}
+library(patchwork)
+
+counties <- map_data("county")
+
+# temp <- census %>% mutate(County = as.character(gsub(" County", "", County)))
+temp <- census %>% 
+  mutate_at(vars(State, County), tolower) %>%
+  mutate(County = gsub(" county|  parish", "", County))
+
+temp_new_counties <- new_counties %>%
+  left_join(temp, by = c("region" = "State", "subregion" = "County"))
+
+# temp_new_counties <- new_counties
+
+temp_new_counties <- temp_new_counties %>%
+  mutate(majority_race = case_when(
+    Hispanic > White & Hispanic > Black & Hispanic > Asian ~ "Hispanic",
+    White > Hispanic & White > Black & White > Asian ~ "White",
+    Black > Hispanic & Black > White & Black > Asian ~ "Black",
+    Asian > Hispanic & Asian > White & Asian > Black ~ "Asian",
+    TRUE ~ "Other"
+  ))
+```
+
+
+
+```{r echo=FALSE}
+california <- temp_new_counties[which(temp_new_counties$region == 'california'), ]
+
+cali_white_map <- ggplot(data = california) + 
+  geom_polygon(aes(x = long, y = lat, fill = White, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = '#E8E2CC', high = "#004434") + # scale_fill_gradient(low = '#E8E2CC', high = "#004434")
+  theme_minimal() +
+  labs(fill = "White %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() + 
+  ggtitle("White Percentage in California Counties")
+
+
+cali_hisp_map <- ggplot(data = california) + 
+  geom_polygon(aes(x = long, y = lat, fill = Hispanic, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = "white", high = "orange") +
+  theme_minimal() +
+  labs(fill = "Hispanic %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Hispanic Percentage in California Counties")
+
+cali_asian_map <- ggplot(data = california) + 
+  geom_polygon(aes(x = long, y = lat, fill = Asian, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = 'white', high = "cornflowerblue") +
+  theme_minimal() +
+  labs(fill = "Asian %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Asian Percentage in California Counties")
+
+cali_black_map <- ggplot(data = california) + 
+  geom_polygon(aes(x = long, y = lat, fill = Black, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = 'white', high = "purple") + #scale_fill_gradient(low = '#DDEAD4', high = "#162D4A")
+  theme_minimal() +
+  labs(fill = "Black %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Black Percentage in California Counties")
+
+```
+
+
+```{r echo=FALSE}
+cali_white_map <- cali_white_map + ggtitle("White Percentage")
+cali_hisp_map <- cali_hisp_map + ggtitle("Hispanic Percentage")
+cali_asian_map <- cali_asian_map + ggtitle("Asian Percentage")
+cali_black_map <- cali_black_map + ggtitle("Black Percentage")
+(cali_white_map + cali_hisp_map) / (cali_asian_map + cali_black_map)
+```
+
+
+```{r echo=FALSE}
+cali_demog_map <- ggplot(data = california) + 
+  geom_polygon(aes(x = long, y = lat, fill = majority_race, group = group), color = "white") + 
+  coord_fixed(1.3) +
+  scale_fill_manual(values = c("Hispanic" = "orange", "White" = "green", "Black" = "purple", "Asian" = "cornflowerblue", "Other" = "gray")) +
+  theme_minimal() +
+  labs(fill = "Majority Race") +
+  theme(text = element_text(size = 10)) + 
+  theme_void() +
+  ggtitle("Majority Demographic Group")
+
+cali_map+cali_demog_map
+```
+
+
+
+```{r echo=FALSE}
+texas <- temp_new_counties[which(temp_new_counties$region == 'texas'), ]
+# candidate is missing for subregion "de witt"
+# texas %>% filter(is.na(candidate))
+
+texas_map <- ggplot(data = texas) + 
+  geom_polygon(aes(x = long, y = lat, fill = candidate, alpha = pct, group = group), color = "white") + 
+  coord_fixed(1.3) +
+  scale_fill_manual(values = c("Joe Biden" = "blue", "Donald Trump" = "red")) +
+  scale_alpha_continuous(range = c(0.4, 1), guide = FALSE) + # Adjust alpha range for visibility
+  theme_minimal() +
+  labs(fill = "Candidate", alpha = "Vote %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Heat Map of Candidates Texas Counties")
+
+texas_map
+```
+
+
+```{r echo=FALSE}
+texas_white_map <- ggplot(data = texas) + 
+  geom_polygon(aes(x = long, y = lat, fill = White, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = '#E8E2CC', high = "#004434") + # scale_fill_gradient(low = '#E8E2CC', high = "#004434")
+  theme_minimal() +
+  labs(fill = "White %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("White Percentage in California Counties")
+
+texas_hisp_map <- ggplot(data = texas) + 
+  geom_polygon(aes(x = long, y = lat, fill = Hispanic, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = "white", high = "orange") +
+  theme_minimal() +
+  labs(fill = "Hispanic %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Hispanic Percentage in Texas Counties")
+
+texas_asian_map <- ggplot(data = texas) + 
+  geom_polygon(aes(x = long, y = lat, fill = Asian, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = 'white', high = "cornflowerblue") +
+  theme_minimal() +
+  labs(fill = "Asian %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Asian Percentage in Texas Counties")
+
+texas_black_map <- ggplot(data = texas) + 
+  geom_polygon(aes(x = long, y = lat, fill = Black, group = group), color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_gradient(low = 'white', high = "purple") + #scale_fill_gradient(low = '#DDEAD4', high = "#162D4A")
+  theme_minimal() +
+  labs(fill = "Black %") +
+  theme(text = element_text(size = 10)) +
+  theme_void() +
+  ggtitle("Black Percentage in Texas Counties")
+
+```
+
+
+```{r echo=FALSE}
+texas_white_map <- texas_white_map + ggtitle("White Percentage")
+texas_hisp_map <- texas_hisp_map + ggtitle("Hispanic Percentage")
+texas_asian_map <- texas_asian_map + ggtitle("Asian Percentage")
+texas_black_map <- texas_black_map + ggtitle("Black Percentage")
+(texas_white_map + texas_hisp_map)/ (texas_black_map + texas_asian_map)
+```
+
+
+```{r echo=FALSE}
+texas <- temp_new_counties[which(temp_new_counties$region == 'texas'), ]
+
+texas_demog_map <- ggplot(data = texas) + 
+  geom_polygon(aes(x = long, y = lat, fill = majority_race, group = group), color = "white") + 
+  coord_fixed(1.3) +
+  scale_fill_manual(values = c("Hispanic" = "orange", "White" = "green", "Black" = "purple", "Asian" = "cyan", "Other" = "gray")) +
+  theme_minimal() +
+  labs(fill = "Majority Race") +
+  theme(text = element_text(size = 10)) + theme_void() +
+  ggtitle("Majority Demographic Group")
+
+texas_map + texas_demog_map
+```
+
+# Data Cleaning
+
+We start by cleaning the county-level census data through several transformations. Initially, we remove any rows with missing values using `na.omit()` and `filter()`. Then, we convert three attributes (Men, Employed, and VotingAgeCitizen) to percentages by dividing each by TotalPop and multiplying by 100. The code creates a new Minority attribute by combining Hispanic, Black, Native, Asian, and Pacific populations and removes these original variables after creating the Minority column using the `.keep = "unused" argument.` The Minority column is then relocated to appear after the White column for better organization.
+
+The code removes several specified columns that are not needed for the analysis: IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork, and Construction.
+
+```{r}
+census.clean <- census %>%
+  na.omit() %>%
+  filter(if_any(everything(), ~ !is.na(.))) %>%
+  mutate(Men = (Men/TotalPop) * 100) %>%
+  mutate(Women = (Women/TotalPop) * 100) %>%
+  mutate(Employed = (Employed/TotalPop) * 100) %>%
+  mutate(VotingAgeCitizen = (VotingAgeCitizen/TotalPop) * 100) %>%
+  mutate(Minority = Hispanic + Black + Native + Asian + Pacific, .keep = "unused") %>% # remove columns used to create Minority
+  relocate(Minority, .after = White) %>%
+  select(-c(IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork, Construction))
+
+head(census.clean, 5)
+```
+

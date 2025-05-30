@@ -1,7 +1,7 @@
 Analysis of the 2020 Presidential Election
 ================
 Alexander Sanchez
-2024-10-20
+2030-01-01
 
 [corr_simple()](https://towardsdatascience.com/how-to-create-a-correlation-matrix-with-too-many-variables-309cc0c0a57)
 
@@ -245,32 +245,6 @@ gallery for ideas and inspiration.
 
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
-``` r
-# Combine data into a single data frame
-# Ensure that `pct` is a continuous variable representing the percentage
-california_combined <- california %>%
-  mutate(candidate_pct = ifelse(candidate == "Joe Biden", pct, -pct))
-
-# Create the plot
-cali_map <- ggplot(california_combined, aes(x = long, y = lat, fill = candidate_pct, group = group)) + 
-  geom_polygon(color = "white") + 
-  coord_fixed(1.3) +
-  scale_fill_gradientn(colours = c("red", "white", "blue"), 
-                       values = scales::rescale(c(-1, 0, 1)), 
-                       breaks = c(-1, 0, 1),
-                       labels = c("Trump", "Neutral", "Biden"),
-                       limits = c(-1, 1),
-                       na.value = "transparent") +
-  theme_minimal() +
-  labs(fill = "Vote %") +
-  theme(text = element_text(size = 10)) +
-  theme_void() +
-  ggtitle("Heat Map of Candidates in California Counties")
-
-# Print the plot
-cali_map
-```
-
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
@@ -283,21 +257,39 @@ cali_map
 
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
-**10. The census data contains county-level census information. In this
-problem, we clean and aggregate the information as follows.**
+# Data Cleaning
 
-- (4 pts) Clean county-level census data census.clean: start with
-  census, filter out any rows with missing values, convert {Men,
-  Employed, VotingAgeCitizen} attributes to percentages, compute
-  Minority attribute by combining {Hispanic, Black, Native, Asian,
-  Pacific}, remove these variables after creating Minority, remove
-  {IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork,
-  Construction}. Many columns are perfectly colineared, in which case
-  one column should be deleted.
+We start by cleaning the county-level census data through several
+transformations. Initially, we remove any rows with missing values using
+`na.omit()` and `filter()`. Then, we convert three attributes (Men,
+Employed, and VotingAgeCitizen) to percentages by dividing each by
+TotalPop and multiplying by 100. The code creates a new Minority
+attribute by combining Hispanic, Black, Native, Asian, and Pacific
+populations and removes these original variables after creating the
+Minority column using the `.keep = "unused" argument.` The Minority
+column is then relocated to appear after the White column for better
+organization.
 
-- (1 pts) Print the first 5 rows of census.clean:
+The code removes several specified columns that are not needed for the
+analysis: IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork,
+and Construction. Finally, we remove the TotalPop column.
 
-<!-- -->
+``` r
+census.clean <- census %>%
+  na.omit() %>%
+  filter(if_any(everything(), ~ !is.na(.))) %>%
+  mutate(Men = (Men/TotalPop) * 100) %>%
+  mutate(Women = (Women/TotalPop) * 100) %>%
+  mutate(Employed = (Employed/TotalPop) * 100) %>%
+  mutate(VotingAgeCitizen = (VotingAgeCitizen/TotalPop) * 100) %>%
+  mutate(Minority = Hispanic + Black + Native + Asian + Pacific, .keep = "unused") %>% # remove columns used to create Minority
+  relocate(Minority, .after = White) %>%
+  select(-c(IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork, Construction)) %>%
+  select(-c(TotalPop)) 
+  # select(-c(Drive,Poverty,ChildPoverty,Professional))
+
+head(census.clean, 5)
+```
 
     ## # A tibble: 5 × 26
     ##   CountyId State   County       Men Women White Minority VotingAgeCitizen Income
@@ -315,122 +307,128 @@ problem, we clean and aggregate the information as follows.**
 
 # Dimensionality reduction
 
-**11. Run PCA for the cleaned county level census data (with State and
-County excluded).** (2 pts) Save the first two principle components PC1
-and PC2 into a two-column data frame, call it pc.county. (2 pts) Discuss
-whether you chose to center and scale the features before running PCA
-and the reasons for your choice. (2 pts) What are the three features
-with the largest absolute values of the first principal component? (2
-pts) Which features have opposite signs and what does that mean about
-the correlation between these features?
+After removing the State and County columns, the code creates a
+two-column data frame called pc.county containing the first two
+principal components (PC1 and PC2) from the PCA analysis of the cleaned
+census data.
 
-While some variables share the same scale, the rest do not. As a result,
-we will center and scale our data before implementing PCA.
+Regarding centering and scaling: The code uses both centering
+`(center=TRUE)` and scaling `(scale=TRUE)` before running PCA, which is
+appropriate because the variables in the census data have different
+scales. For example, some variables are percentages, while others might
+be raw counts or dollar values. Without scaling, variables with more
+significant variances would dominate the principal components,
+regardless of their importance.
 
 ``` r
 pr.out.census <- prcomp(temp_census.clean, scale=TRUE, center = TRUE)
 ```
 
-Below are the three values with the largest absolute values of the first
-principal component.
+The three features with the largest absolute values of the first
+principal component are:
 
-    ##              Men            Women VotingAgeCitizen 
-    ##           0.4675           0.4675           0.3235
+Poverty, ChildPoverty, Employed
 
-Below are the variables with negative values of the first principal
-component.
+Several features have negative values in the first principal component,
+including
 
-    ##            Women            White VotingAgeCitizen          Poverty 
-    ##         -0.46747         -0.13995         -0.32349         -0.14353 
-    ##     ChildPoverty     Professional           Office            Drive 
-    ##         -0.11912         -0.13413         -0.07762         -0.07346 
-    ##       WorkAtHome     SelfEmployed       FamilyWork     Unemployment 
-    ##         -0.22497         -0.29908         -0.20214         -0.06475
+Women, Minority, Poverty, ChildPoverty, Service, Office, Production,
+Drive, Carpool, OtherTransp, MeanCommute, Unemployment
 
-**Combine PCA results with county and state**
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
 
-    ##   CountyId         County   State     PC1     PC2     PC3      PC4      PC5
-    ## 1     1001 Autauga County Alabama  0.2576  1.2629  0.5960 -0.06454  0.36072
-    ## 2     1003 Baldwin County Alabama  0.9397  1.3783  0.8209 -0.65453  1.32094
-    ## 3     1005 Barbour County Alabama -3.8383 -0.3144 -1.3777  1.35737  0.19681
-    ## 4     1007    Bibb County Alabama -1.2697  0.3803 -2.1657  1.95617  1.02423
-    ## 5     1009  Blount County Alabama -0.3331  2.8055 -0.4877  0.41604  0.03168
-    ## 6     1011 Bullock County Alabama -4.5639 -0.4862 -1.3311  2.72115 -1.55738
-    ##       PC6      PC7      PC8      PC9     PC10    PC11     PC12    PC13     PC14
-    ## 1 -0.4291 -0.18432  0.33816 -0.03633  0.36346  0.5726 -0.18996 -0.5454 -0.01721
-    ## 2 -0.2536 -0.09437  0.48219  0.29354 -0.01565 -0.0614  0.45349  0.2316  0.31253
-    ## 3 -0.4923  0.34694 -0.87831  0.92535 -0.15190 -0.5139 -0.85926  0.1346 -0.80957
-    ## 4  0.0875  1.02609 -0.95859  0.46454  0.02073  0.4749  0.01344 -0.5661 -0.29565
-    ## 5 -0.1853  1.59668 -0.03545  0.96000  0.29349  0.1500 -0.15764 -0.2403  0.73077
-    ## 6  0.4290  1.52401 -0.66577  0.55263  0.48685 -0.5483 -0.22163  1.4228 -2.47939
-    ##       PC15     PC16     PC17     PC18     PC19     PC20   PC21       PC22
-    ## 1  0.13382  0.31326 -0.04651 -0.19324 -0.31777  0.02789 0.1234 -0.0184658
-    ## 2  0.24074  0.05314  0.40677  0.18295 -0.11654  0.06923 0.1055 -0.0119941
-    ## 3 -0.16202 -0.32525 -0.09004 -0.29370 -0.06238 -0.22986 0.2905 -0.0006574
-    ## 4 -0.03449 -0.21968  0.25149  0.01529  0.06687 -0.25356 0.1997 -0.0252546
-    ## 5  0.72551  0.37377  0.32001  0.08565  0.30909  0.22032 0.2060  0.0106675
-    ## 6  0.73250 -0.39641 -0.29940  0.31845  0.17307 -0.20061 0.5031 -0.0056433
-    ##        PC23
-    ## 1 5.747e-15
-    ## 2 9.767e-15
-    ## 3 4.704e-15
-    ## 4 1.832e-15
-    ## 5 7.066e-15
-    ## 6 1.986e-15
+Notably, Poverty and ChildPoverty have negative signs and large
+magnitudes. Features with opposite signs in the principal component
+typically indicate a negative correlation between them. This means that
+as one feature increases, the other tends to decrease. In this case, the
+negative correlation suggests that counties with higher values in these
+socioeconomic indicators tend to have lower values in other related
+features.
 
-**12. (2 pts) Determine the number of minimum number of PCs needed to
-capture 90% of the variance for the analysis.** (2 pts) Plot proportion
-of variance explained (PVE) and cumulative PVE.
+For instance, counties with high poverty rates might be associated with
+lower income levels, fewer job opportunities, and different commuting
+patterns. The opposite signs in the first principal component capture
+this underlying relationship in the data, showing how different
+socioeconomic and demographic variables are interconnected.
+
+## Determine the number of minimum number of PCs needed to capture 90% of the variance for the analysis
+
+The code calculates the proportion of variance explained (PVE) for each
+principal component by: 1. Extracting the standard deviations from the
+principal component analysis 2. Calculating the variance by squaring the
+standard deviations 3. Computing the proportion of variance by dividing
+each component’s variance by the total variance
+
+``` r
+x <- pr.out.census$sdev
+pr.var <- x^2
+pve <- pr.var/sum(pr.var)
+```
+
+Computing `min(which(cumsum(pve) >= .9))`, we need about 12 PCs in order
+to explain 90% of the total variation in the data. Thus, we need to
+retain the first 15 components to explain at least 90% of the
+variability in the original data.
+
+The cumulative proportion of variance plot visually demonstrates how the
+explained variance accumulates as more principal components are
+included, allowing us to see the incremental contribution of each
+additional component to the total variance explained.
 
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
 
-We need about 12 PCs in order to explain 90% of the total variation in
-the data.
-
 # Clustering
 
-**13. (2 pts) With census.clean (with State and County excluded),
-perform hierarchical clustering with complete linkage.** (2 pts) Cut the
-tree to partition the observations into 10 clusters. (2 pts) Re-run the
-hierarchical clustering algorithm using the first 2 principal components
-from pc.county as inputs instead of the original features. (2 pts)
-Compare the results and comment on your observations. For both
-approaches investigate the cluster that contains Santa Barbara County.
-(2 pts) Which approach seemed to put Santa Barbara County in a more
-appropriate clusters? Comment on what you observe and discuss possible
-explanations for these observations.
+### Centering and Scaling
 
-Below is census.clean (with State and County excluded):
+Same approach as dimensionality reduction.
+
+``` r
+scar <- scale(census.clean[,c(-1:-3)], center=TRUE, scale=TRUE)
+census.clean.dist <- dist(scar)
+set.seed(123)
+census.clean.hclust <- hclust(census.clean.dist)
+```
+
+### First Clustering (Original Features):
+
+When performing hierarchical clustering using the scaled original
+features with complete linkage and cutting the tree into 10 clusters,
+the distribution of observations across clusters is quite uneven.
+Cluster 1 contains the most observations, with 2,612 counties, while
+several other clusters have very few counties. For instance, clusters 6
+and 9 have only 6 and 5 counties, respectively, indicating that the
+clustering algorithm identified a few very distinct groups among the
+counties.
 
     ## clus
     ##    1    2    3    4    5    6    7    8    9   10 
     ## 2612   91    6  278  177   11    6   32    5    1
 
-Below is using the first 2 principal components:
+### Second Clustering (First Two Principal Components):
+
+The cluster distribution changes significantly after re-running the
+hierarchical clustering using the first two principal components from
+pc.county. Cluster 1 contains 1,670 counties, cluster 7 has 648
+counties, and Cluster 2 has 563 counties. The remaining clusters have
+fewer counties, but the distribution differs from the first clustering.
 
     ## clus_new
     ##    1    2    3    4    5    6    7    8    9   10 
     ## 1022 1070   93   89  103  392   16    1  416   17
 
-Which approach seemed to put Santa Barbara County in a more appropriate
-clusters?
-$\underset{\phi_{11},... ,\phi_{p1}}{\max} \frac{1}{n} \sum_{i=1}^{n} (\sum_{j=1}^{p} \phi_{j1}x_{ij})^2$
+What can we take out of this
 
-**Answer: Santa Barbara County was placed into cluster 1 for the regular
-hierarchical clustering. For hierarchical clustering using pc.county,
-Santa Barbara County was placed into cluster 6. Using the first 2
-principal components (2PC) seems to place Santa Barbara County in a more
-appropriate cluster than the non-first 2 principal components (Non-2PC).
-Creating a table for each one, we can see -2PC has many values for
-clusters 1 and 2, yet there are rarely any for clusters 3-10. On the
-other hand, 2PC has many values for clusters 1-4, though, for clusters
-5-10, there are rarely any as well. For Non-2PC, cluster 1 and cluster 2
-are over-saturated, but 2PC resolved this issue better, though not
-entirely**
+- Both clustering approaches result in highly imbalanced cluster sizes,
+  suggesting some very distinct groups of counties.
+- The uneven cluster sizes in both methods suggest that a few very
+  distinct county groups stand out from the majority, which could
+  represent counties with unique demographic or economic
+  characteristics.
 
 ### The Elbow Method
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
 
 # Classification
 
@@ -473,9 +471,9 @@ voting behavior.
 
 Decision Tree purity
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-66-1.png)<!-- -->
+From our function `cv.tree()`, the best size is 5.
 
 ``` r
 cv_data <- data.frame(
@@ -499,16 +497,18 @@ ggplot(cv_data, aes(x = size, y = error)) +
     axis.text = element_text(size = 10),
     panel.grid.minor = element_blank()
   ) +
-  scale_x_continuous(breaks = unique(cv_data$size)) +  # Show all tree sizes on x-axis
+  scale_x_continuous(breaks = unique(cv_data$size)) +  # All tree sizes on x-axis
   geom_point(
     data = cv_data[which.min(cv_data$error), ],
     aes(x = size, y = error),
     color = "red",
     size = 4
-  )  # Highlight the minimum error point
+  )  # Highlight minimum error point
 ```
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
 
 **Both trees have Transit first followed by White and Women. Before
 pruning, White was right below Women, but in after pruning, White is at
@@ -671,6 +671,13 @@ the tree method, logistic regression, and the lasso logistic regression?
 
 ### Neural Net
 
+    ##  [1] "candidate"        "Men"              "Women"            "White"           
+    ##  [5] "Minority"         "VotingAgeCitizen" "Income"           "Poverty"         
+    ##  [9] "ChildPoverty"     "Professional"     "Service"          "Office"          
+    ## [13] "Production"       "Drive"            "Carpool"          "Transit"         
+    ## [17] "OtherTransp"      "WorkAtHome"       "MeanCommute"      "Employed"        
+    ## [21] "PrivateWork"      "SelfEmployed"     "FamilyWork"       "Unemployment"
+
     ## Loading required package: foreach
 
     ## 
@@ -682,97 +689,17 @@ the tree method, logistic regression, and the lasso logistic regression?
 
     ## Loading required package: iterators
 
-``` r
-# Storing Error Rates
-a <- calc_error_rate(as.factor(train_pred), election.tr$candidate)
-b <- calc_error_rate(as.factor(test_pred), election.te$candidate)
-records[5,] <- c(a,b)
-
-roc_pred_nn <- prediction(
-    predictions = test_pred_prob,
-    labels = election.te$candidate #as.factor(election.te$candidate, levels = c("Donald Trump", "Joe Biden"))
-)
-
-roc_perf_nn <- performance(roc_pred_nn, measure = "tpr", x.measure = "fpr")
-```
-
-``` r
-# Modify factor levels to be valid R names
-election.tr$candidate <- factor(election.tr$candidate,
-                              levels = c("Donald Trump", "Joe Biden"),
-                              labels = c("Donald_Trump", "Joe_Biden"))
-
-election.te$candidate <- factor(election.te$candidate,
-                              levels = c("Donald Trump", "Joe Biden"),
-                              labels = c("Donald_Trump", "Joe_Biden"))
-
-# Setup parallel processing
-num_cores <- availableCores(omit = 1)  # Leave one core free
-cl <- makeCluster(num_cores)
-registerDoParallel(cl)
-
-# Create training control object
-ctrl <- trainControl(
-  method = "cv",
-  number = 10,
-  classProbs = TRUE,
-  summaryFunction = twoClassSummary,
-  verboseIter = TRUE,
-  allowParallel = TRUE
-)
-
-# Define grid of hyperparameters
-grid <- expand.grid(
-  size = c(3, 5, 7, 10, 13),
-  decay = c(0.001, 0.01, 0.1, 0.3, 0.5)
-)
-
-# Set seed for reproducibility
-set.seed(123)
-
-# Train model with grid search
-nnet_optimal <- train(
-  x = X_train_scaled,
-  y = election.tr$candidate,
-  method = "nnet",
-  metric = "ROC",
-  trControl = ctrl,
-  tuneGrid = grid,
-  trace = FALSE,
-  maxit = 1000,
-  linout = FALSE,
-  MaxNWts = 1000
-)
-```
-
     ## Aggregating results
     ## Selecting tuning parameters
     ## Fitting size = 7, decay = 0.5 on full training set
 
     ## Warning: Setting row names on a tibble is deprecated.
 
-``` r
-# Stop parallel processing
-stopCluster(cl)
-
-
-# Make predictions with optimal model
-train_pred_prob <- predict(nnet_optimal, X_train_scaled, type = "prob")[,"Joe_Biden"]
-test_pred_prob <- predict(nnet_optimal, X_test_scaled, type = "prob")[,"Joe_Biden"]
-
-# Calculate error rates
-train_pred <- ifelse(train_pred_prob > 0.5, "Joe_Biden", "Donald_Trump")
-test_pred <- ifelse(test_pred_prob > 0.5, "Joe_Biden", "Donald_Trump")
-```
-
-``` r
-# Plot tuning results
-plot(nnet_optimal)
-```
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-91-1.png)<!-- -->
 
 ![](2020_presidential_election_files/figure-gfm/unnamed-chunk-93-1.png)<!-- -->
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-95-1.png)<!-- -->
+![](2020_presidential_election_files/figure-gfm/unnamed-chunk-94-1.png)<!-- -->
 
 **Answer:**
 
