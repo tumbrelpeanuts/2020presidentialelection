@@ -3,8 +3,6 @@ Analysis of the 2020 Presidential Election
 Alexander Sanchez
 2030-01-01
 
-[corr_simple()](https://towardsdatascience.com/how-to-create-a-correlation-matrix-with-too-many-variables-309cc0c0a57)
-
 # Instructions and Expectations
 
 Predicting voter behavior is complicated for many reasons despite the
@@ -28,6 +26,8 @@ which is available here.
 
 The following code load in these two data sets: `election.raw` and
 `census.`
+
+    ## [1] "/Users/dsanch/GitHub_Projects/2020_presidential_election/R"
 
 # Exploratory Data Analysis
 
@@ -116,54 +116,6 @@ county. Also, `census` has one more state than `election.raw` since
 
 # Data Wrangling
 
-**3. (4 pts) Construct aggregated data sets from election.raw data:
-i.e.,**
-
-- Keep the county-level data as it is in election.raw.
-- Create a state-level summary into a election.state.
-- Create a federal-level summary into a election.total.
-
-<!-- -->
-
-    ##      candidate  county   state total_votes
-    ## 1 Donald Trump Autauga Alabama       19838
-    ## 2 Jo Jorgensen Autauga Alabama         350
-    ## 3    Joe Biden Autauga Alabama        7503
-    ## 4    Write-ins Autauga Alabama          79
-    ## 5 Donald Trump Baldwin Alabama       83544
-    ## 6 Jo Jorgensen Baldwin Alabama        1229
-
-    ##         candidate   state total_votes
-    ## 1    Donald Trump Alabama     1441168
-    ## 2    Jo Jorgensen Alabama       25176
-    ## 3       Joe Biden Alabama      849648
-    ## 4       Write-ins Alabama        7312
-    ## 5    Brock Pierce  Alaska         825
-    ## 6 Don Blankenship  Alaska        1127
-
-**4. (1 pts) How many named presidential candidates were there in the
-2020 election? (2 pts) Draw a bar chart of all votes received by each
-candidate. You can split this into multiple plots or may prefer to plot
-the results on a log scale. Either way, the results should be clear and
-legible! (For fun: spot Kanye West among the presidential candidates!)**
-
-There were about 36 presidential candidates in the 2020 election, not
-counting write-ins and none of these candidates.
-
-    ## There were 37 named presidential candidates in the 2020 election.
-
-    ## # A tibble: 6 × 2
-    ##   candidate          total_votes
-    ##   <fct>                    <dbl>
-    ## 1 Joe Biden             82046434
-    ## 2 Donald Trump          74585705
-    ## 3 Jo Jorgensen           1874183
-    ## 4 Howie Hawkins           404835
-    ## 5 Write-ins               254274
-    ## 6 Rocky De La Fuente       88158
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-3.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-4.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-5.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-6.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-7.png)<!-- -->![](2020_presidential_election_files/figure-gfm/unnamed-chunk-19-8.png)<!-- -->
-
 **5. (6 pts) Create data sets county.winner and state.winner by taking
 the candidate with the highest proportion of votes in both county level
 and state level. Hint: to create county.winner, start with election.raw,
@@ -191,72 +143,6 @@ the proportion of votes. Then choose the highest row using top_n
     ## 5 california Joe Biden    DEM            11109764 0.635
     ## 6 colorado   Joe Biden    DEM             1804352 0.554
 
-# Visualization
-
-Visualization is crucial for gaining insight and intuition during data
-mining. We will map our data onto maps.
-
-The R package ggplot2 can be used to draw maps. Consider the following
-code.
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
-
-The variable states contain information to draw white polygons, and
-fill-colors are determined by region.
-
-**6. (4 pts) Use similar code to above to draw county-level map by
-creating counties = map_data(“county”). Color by county.**
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
-
-Now color the map by the winning candidate for each state. First,
-combine states variable and state.winner we created earlier using
-left_join(). Note that left_join() needs to match up values of states to
-join the tables. A call to left_join() takes all the values from the
-first table and looks for matches in the second table. If it finds a
-match, it adds the data from the second table; if not, it adds missing
-values:
-
-Here, we’ll be combing the two data sets based on state name. However,
-the state names in states and state.winner can be in different formats:
-check them! Before using left_join(), use certain transform to make sure
-the state names in the two data sets: states (for map drawing) and
-state.winner (for coloring) are in the same formats. Then left_join().
-Your figure will look similar to New York Times map. .winner, state)
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
-
-**8. (6 pts) Color the map of the state of California by the winning
-candidate for each county.**
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
-
-**9. (4 pts) (Open-ended) Create a visualization of your choice using
-census data.** Many exit polls noted that demographics played a big role
-in the election. Use this Washington Post article and this R graph
-gallery for ideas and inspiration.
-
-    ## Warning: The `guide` argument in `scale_*()` cannot be `FALSE`. This was deprecated in
-    ## ggplot2 3.3.4.
-    ## ℹ Please use "none" instead.
-    ## This warning is displayed once every 8 hours.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
-
 # Data Cleaning
 
 We start by cleaning the county-level census data through several
@@ -272,33 +158,34 @@ organization.
 
 The code removes several specified columns that are not needed for the
 analysis: IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork,
-and Construction. Finally, we remove the TotalPop column.
+and Construction.
 
 ``` r
 census.clean <- census %>%
   na.omit() %>%
   filter(if_any(everything(), ~ !is.na(.))) %>%
-  mutate(Men = (Men/TotalPop) * 100) %>%
-  mutate(Women = (Women/TotalPop) * 100) %>%
-  mutate(Employed = (Employed/TotalPop) * 100) %>%
-  mutate(VotingAgeCitizen = (VotingAgeCitizen/TotalPop) * 100) %>%
-  mutate(Minority = Hispanic + Black + Native + Asian + Pacific, .keep = "unused") %>% # remove columns used to create Minority
+  mutate(
+    Men = (Men/TotalPop) * 100,
+    #Women = (Women/TotalPop) * 100
+    Employed = (Employed/TotalPop) * 100,
+    VotingAgeCitizen = (VotingAgeCitizen/TotalPop) * 100,
+    Minority = Hispanic + Black + Native + Asian + Pacific
+    ) %>%
   relocate(Minority, .after = White) %>%
-  select(-c(IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork, Construction)) %>%
-  select(-c(TotalPop)) 
-  # select(-c(Drive,Poverty,ChildPoverty,Professional))
+  select(-c(Hispanic, Black, Native, Asian, Pacific, Women)) %>%
+  select(-c(IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork, Construction))
 
 head(census.clean, 5)
 ```
 
     ## # A tibble: 5 × 26
-    ##   CountyId State   County       Men Women White Minority VotingAgeCitizen Income
+    ##   CountyId State   County  TotalPop   Men White Minority VotingAgeCitizen Income
     ##      <dbl> <chr>   <chr>      <dbl> <dbl> <dbl>    <dbl>            <dbl>  <dbl>
-    ## 1     1001 Alabama Autauga C…  48.9  51.1  75.4     22.8             74.5  55317
-    ## 2     1003 Alabama Baldwin C…  48.9  51.1  83.1     15.4             76.4  52562
-    ## 3     1005 Alabama Barbour C…  53.3  46.7  45.7     52.8             77.4  33368
-    ## 4     1007 Alabama Bibb Coun…  54.3  45.7  74.6     24.8             78.2  43404
-    ## 5     1009 Alabama Blount Co…  49.4  50.6  87.4     10.9             73.7  47412
+    ## 1     1001 Alabama Autaug…    55036  48.9  75.4     22.8             74.5  55317
+    ## 2     1003 Alabama Baldwi…   203360  48.9  83.1     15.4             76.4  52562
+    ## 3     1005 Alabama Barbou…    26201  53.3  45.7     52.8             77.4  33368
+    ## 4     1007 Alabama Bibb C…    22580  54.3  74.6     24.8             78.2  43404
+    ## 5     1009 Alabama Blount…    57667  49.4  87.4     10.9             73.7  47412
     ## # ℹ 17 more variables: Poverty <dbl>, ChildPoverty <dbl>, Professional <dbl>,
     ## #   Service <dbl>, Office <dbl>, Production <dbl>, Drive <dbl>, Carpool <dbl>,
     ## #   Transit <dbl>, OtherTransp <dbl>, WorkAtHome <dbl>, MeanCommute <dbl>,
@@ -332,12 +219,12 @@ Poverty, ChildPoverty, Employed
 Several features have negative values in the first principal component,
 including
 
-Women, Minority, Poverty, ChildPoverty, Service, Office, Production,
-Drive, Carpool, OtherTransp, MeanCommute, Unemployment
+Minority, Poverty, ChildPoverty, Service, Office, Production, Drive,
+Carpool, OtherTransp, MeanCommute, Unemployment
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
-Notably, Poverty and ChildPoverty have negative signs and large
+Notably, Poverty and ChildPoverty have negative loadings and large
 magnitudes. Features with opposite signs in the principal component
 typically indicate a negative correlation between them. This means that
 as one feature increases, the other tends to decrease. In this case, the
@@ -365,9 +252,9 @@ pr.var <- x^2
 pve <- pr.var/sum(pr.var)
 ```
 
-Computing `min(which(cumsum(pve) >= .9))`, we need about 12 PCs in order
+Computing `min(which(cumsum(pve) >= .9))`, we need about 13 PCs in order
 to explain 90% of the total variation in the data. Thus, we need to
-retain the first 15 components to explain at least 90% of the
+retain the first 13 components to explain at least 90% of the
 variability in the original data.
 
 The cumulative proportion of variance plot visually demonstrates how the
@@ -375,7 +262,7 @@ explained variance accumulates as more principal components are
 included, allowing us to see the incremental contribution of each
 additional component to the total variance explained.
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
 
 # Clustering
 
@@ -386,7 +273,7 @@ Same approach as dimensionality reduction.
 ``` r
 scar <- scale(census.clean[,c(-1:-3)], center=TRUE, scale=TRUE)
 census.clean.dist <- dist(scar)
-set.seed(123)
+set.seed(10)
 census.clean.hclust <- hclust(census.clean.dist)
 ```
 
@@ -395,15 +282,15 @@ census.clean.hclust <- hclust(census.clean.dist)
 When performing hierarchical clustering using the scaled original
 features with complete linkage and cutting the tree into 10 clusters,
 the distribution of observations across clusters is quite uneven.
-Cluster 1 contains the most observations, with 2,612 counties, while
-several other clusters have very few counties. For instance, clusters 6
-and 9 have only 6 and 5 counties, respectively, indicating that the
+Cluster 1 contains the most observations, with 2,967 counties, while
+several other clusters have very few counties. For instance, clusters 9
+and 10 have only 4 and 1 counties, respectively, indicating that the
 clustering algorithm identified a few very distinct groups among the
 counties.
 
     ## clus
     ##    1    2    3    4    5    6    7    8    9   10 
-    ## 2612   91    6  278  177   11    6   32    5    1
+    ## 2924  191    6    5   31    1   17    6   34    4
 
 ### Second Clustering (First Two Principal Components):
 
@@ -415,7 +302,7 @@ fewer counties, but the distribution differs from the first clustering.
 
     ## clus_new
     ##    1    2    3    4    5    6    7    8    9   10 
-    ## 1022 1070   93   89  103  392   16    1  416   17
+    ## 1433  924   94  601   15   90    1   21    8   32
 
 What can we take out of this
 
@@ -426,34 +313,57 @@ What can we take out of this
   represent counties with unique demographic or economic
   characteristics.
 
-### The Elbow Method
-
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
-
 # Classification
 
-We start considering supervised learning tasks now. The most
-interesting/important question to ask is: can we use census information
-in a county to predict the winner in that county?
+We exclude the predictor party from election.cl because the
+classification task aims to predict a county’s winner using census
+information. Including party as a predictor would create data leakage,
+as it directly informs us about the candidate’s party affiliation rather
+than the demographic or socioeconomic factors of the county.
 
-In order to build classification models, we first need to combine
-county.winner and census.clean data. This seemingly straightforward task
-is harder than it sounds. For simplicity, the following code makes
-necessary changes to merge them into election.cl for classification.
+The party variable is tied to the outcome (the winner), and its
+inclusion would undermine the model’s ability to generalize by basing
+predictions on the relationship between party and candidate rather than
+the census data. We remove the party variable from the dataset to ensure
+the model learns from relevant predictors.
 
-**14. Understand the code above. (3 pts) Why do we need to exclude the
-predictor party from election.cl?**
+``` r
+# we move all state and county names into lower-case
+tmpwinner <- county.winner %>% ungroup %>%
+  mutate_at(vars(state, county), tolower)
 
-**Answer:** **Because of the statement: “can we use census information
-in a county to predict the winner in that county?” The party predictor
-informs us about the candidate’s party affiliation, not about the
-county’s party affiliation. If the predictor variable party was about
-the county, then we could possibly use it.**
+# we move all state and county names into lower-case
+# we further remove suffixes of "county" and "parish"
+tmpcensus <- census.clean %>% mutate_at(vars(State, County), tolower) %>%
+  mutate(County = gsub(" county|  parish", "", County))
+
+# we join the two datasets
+election.cl <- tmpwinner %>%
+  left_join(tmpcensus, by = c("state"="State", "county"="County")) %>%
+  na.omit
+
+# drop levels of county winners if you haven't done so in previous parts
+election.cl$candidate <- droplevels(election.cl$candidate)
+
+## save meta information
+election.meta <- election.cl %>% select(c(county, party, CountyId, state, total_votes, pct, total))
+
+## save predictors and class labels
+election.cl = election.cl %>% select(-c(county, party, CountyId, state, total_votes, pct, total))
+```
 
 # Classification
 
 Using the following code, partition data into 80% training and 20%
 testing:
+
+``` r
+set.seed(10)
+n <- nrow(election.cl)
+idx.tr <- sample.int(n, 0.8*n)
+election.tr <- election.cl[idx.tr, ]
+election.te <- election.cl[-idx.tr, ]
+```
 
 Use the following code to define 10 cross-validation folds:
 
@@ -471,9 +381,9 @@ voting behavior.
 
 Decision Tree purity
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
-From our function `cv.tree()`, the best size is 5.
+From our function `cv.tree()`, the best size is 10.
 
 ``` r
 cv_data <- data.frame(
@@ -506,9 +416,9 @@ ggplot(cv_data, aes(x = size, y = error)) +
   )  # Highlight minimum error point
 ```
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 **Both trees have Transit first followed by White and Women. Before
 pruning, White was right below Women, but in after pruning, White is at
@@ -523,8 +433,8 @@ were going to vote for Biden.**
 
     ##               
     ## pred.test.tree Donald Trump Joe Biden
-    ##   Donald Trump          464        26
-    ##   Joe Biden              38        74
+    ##   Donald Trump          478        40
+    ##   Joe Biden              24        60
 
 **16. (2 pts) Run a logistic regression to predict the winning candidate
 in each county.** (1 pts) Save training and test errors to records
@@ -535,35 +445,10 @@ terms of a unit change in the variables.
 
 For interpretable machine learning
 
-    ##                    Estimate Std. Error  z value  Pr(>|z|)
-    ## (Intercept)      -3.614e+01  9.596e+00 -3.76657 1.655e-04
-    ## Men               7.494e-02  5.092e-02  1.47177 1.411e-01
-    ## White            -1.749e-01  6.947e-02 -2.51787 1.181e-02
-    ## Minority         -3.736e-02  6.800e-02 -0.54948 5.827e-01
-    ## VotingAgeCitizen  1.898e-01  2.722e-02  6.97507 3.057e-12
-    ## Income           -7.805e-06  1.639e-05 -0.47627 6.339e-01
-    ## Poverty           3.148e-02  4.325e-02  0.72786 4.667e-01
-    ## ChildPoverty      1.439e-02  2.533e-02  0.56830 5.698e-01
-    ## Professional      3.294e-01  3.855e-02  8.54408 1.296e-17
-    ## Service           3.718e-01  4.828e-02  7.69947 1.366e-14
-    ## Office            1.543e-01  4.692e-02  3.28830 1.008e-03
-    ## Production        1.899e-01  4.179e-02  4.54413 5.516e-06
-    ## Drive            -1.997e-01  4.951e-02 -4.03271 5.514e-05
-    ## Carpool          -1.855e-01  6.089e-02 -3.04697 2.312e-03
-    ## Transit           5.373e-02  1.001e-01  0.53708 5.912e-01
-    ## OtherTransp      -2.734e-03  1.035e-01 -0.02642 9.789e-01
-    ## WorkAtHome       -5.869e-02  7.187e-02 -0.81668 4.141e-01
-    ## MeanCommute       5.043e-02  2.382e-02  2.11710 3.425e-02
-    ## Employed          2.865e-01  3.425e-02  8.36541 5.991e-17
-    ## PrivateWork       1.008e-01  2.170e-02  4.64750 3.360e-06
-    ## SelfEmployed      8.590e-04  4.509e-02  0.01905 9.848e-01
-    ## FamilyWork       -4.964e-01  2.901e-01 -1.71091 8.710e-02
-    ## Unemployment      2.799e-01  5.037e-02  5.55713 2.743e-08
-
 Below are the significant variables:
 
     ## Unemployment     Employed Professional      Service   FamilyWork 
-    ##       0.2799       0.2865       0.3294       0.3718       0.4964
+    ##       0.2699       0.2827       0.2989       0.3507       0.5178
 
 White is included, but Women and Minority are not among the top 5. It
 does deviate from the Decision Tree analysis.
@@ -572,8 +457,10 @@ If were to increase Production by one unit, holding the rest fixed, then
 applying the same logic to Professional, Employed, Service, and
 Unemployment, we would get percent in the odds:
 
-    ##   Production Unemployment     Employed Professional      Service 
-    ##        20.91        32.30        33.18        39.01        45.03
+    ## VotingAgeCitizen     Unemployment         Employed     Professional 
+    ##            22.70            30.98            32.68            34.84 
+    ##          Service 
+    ##            42.01
 
 **17. You may notice that you get a warning glm.fit: fitted
 probabilities numerically 0 or 1 occurred.** As we discussed in class,
@@ -599,19 +486,19 @@ The optimal value of $\lambda$ in cross validation is 0.0011.
 Below are the non-zero coefficients in the LASSO regression for the
 optimal value of λ:
 
-    ##      (Intercept)              Men            Women            White 
-    ##       -3.446e+01        2.584e-02       -8.838e-15       -1.260e-01 
+    ##      (Intercept)         TotalPop              Men            White 
+    ##       -3.213e+01        1.471e-06        2.188e-02       -1.222e-01 
     ## VotingAgeCitizen          Poverty     Professional          Service 
-    ##        1.791e-01        4.838e-02        2.679e-01        3.054e-01 
+    ##        1.916e-01        5.175e-02        2.409e-01        2.821e-01 
     ##           Office       Production            Drive          Carpool 
-    ##        1.075e-01        1.301e-01       -1.424e-01       -1.200e-01 
+    ##        7.449e-02        1.184e-01       -1.416e-01       -1.151e-01 
     ##          Transit      OtherTransp      MeanCommute         Employed 
-    ##        1.036e-01        3.025e-02        2.831e-02        2.457e-01 
+    ##        6.278e-02        2.807e-02        2.594e-02        2.465e-01 
     ##      PrivateWork     SelfEmployed       FamilyWork     Unemployment 
-    ##        8.855e-02       -1.517e-02       -4.299e-01        2.456e-01
+    ##        7.233e-02       -2.918e-02       -4.376e-01        2.370e-01
 
 ``` r
-set.seed(20)
+set.seed(10)
 
 # Predict probabilities for training and test datasets
 prob.training <- predict(lasso.model, type = "response", s = bestlam, newx = x.train)
@@ -651,7 +538,7 @@ classification results, discuss the pros and cons of the various
 methods. (2 pts) Are the different classifiers more appropriate for
 answering different kinds of questions about the election?
 
-![](2020_presidential_election_files/figure-gfm/before-random-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/before-random-1.png)<!-- -->
 
 **Answer:**
 
@@ -671,13 +558,6 @@ the tree method, logistic regression, and the lasso logistic regression?
 
 ### Neural Net
 
-    ##  [1] "candidate"        "Men"              "Women"            "White"           
-    ##  [5] "Minority"         "VotingAgeCitizen" "Income"           "Poverty"         
-    ##  [9] "ChildPoverty"     "Professional"     "Service"          "Office"          
-    ## [13] "Production"       "Drive"            "Carpool"          "Transit"         
-    ## [17] "OtherTransp"      "WorkAtHome"       "MeanCommute"      "Employed"        
-    ## [21] "PrivateWork"      "SelfEmployed"     "FamilyWork"       "Unemployment"
-
     ## Loading required package: foreach
 
     ## 
@@ -691,15 +571,15 @@ the tree method, logistic regression, and the lasso logistic regression?
 
     ## Aggregating results
     ## Selecting tuning parameters
-    ## Fitting size = 7, decay = 0.5 on full training set
+    ## Fitting size = 13, decay = 0.5 on full training set
 
     ## Warning: Setting row names on a tibble is deprecated.
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-91-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-68-1.png)<!-- -->
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-93-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-70-1.png)<!-- -->
 
-![](2020_presidential_election_files/figure-gfm/unnamed-chunk-94-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-71-1.png)<!-- -->
 
 **Answer:**
 
@@ -710,76 +590,3 @@ Tree throughout the ROC Curve. In my opinion Decision Tree and Random
 Forest would not be suitable for our problem since we already narrowed
 it down to two candidates. I still think LASSO Logistic Regression is
 the most optimal, followed by our regular Logistic Regression.**
-
-**20. (9 pts) Tackle at least one more interesting question. Creative
-and thoughtful analysis will be rewarded!** Some possibilities for
-further exploration are:
-
-- Conduct an exploratory analysis of the “purple” counties – the “battle
-  ground” / “swing counties”: which the models predict Biden and Trump
-  were roughly equally likely to win. What is it about these counties
-  that make them hard to predict?
-
-Arizona, Florida, Michigan, Pennsylvania, Wisconsin New Hampshire, North
-Carolina, Georgia, and Minnesota are swing states (battle ground
-states). “arizona”, “florida”, “michigan”, “pennsylvania”, “wisconsin”,
-“new hampshire”, “north carolina”, “minnesota”, “georgia”. “Arizona”,
-“Florida”, “Michigan”, “Pennsylvania”, “Wisconsin”, “New Hampshire”,
-“North Carolina”, “Minnesota”, “Georgia”
-
-[Voter turnout in United States presidential
-elections](https://en.wikipedia.org/wiki/Voter_turnout_in_United_States_presidential_elections)
-
-**Answer: I will use voter turnout as % of VAP**
-
-**As the maps illustrate, Joe Biden won 7/9 battle ground states while
-Trump won 2/9. If we were to compare this to the 2016 election, Trump
-won Arizona, Wisconsin, Pennsylvania, Michigan, Georgia. All these
-states flipped for the 2020 election, which Biden ended up winning the
-2020 election.**
-
-**One of the difficulties of predicting these counties/states is that
-future events such as war, natural disasters, pandemics are
-unpredictable. The COVID-19 pandemic drastically altered the 2020
-election since voting became a lot easier to do. The 2016 election had a
-voter turnout of 54.8%, but the 2020 election had a voter turnout of
-62.0%. The 2008 election had a voter turnout of 57.1%, but the 2012
-election had a voter turnout of 53.8%. Unlike the 2012 run of Obama, the
-2020 run of Trump saw an increase in voter turnout, but at the detriment
-of Trump.**
-
-**Below are a list of articles and research papers on census if you are
-interested. In my opinion, these are important finding that will
-determine future elections:**
-
-[The Male Non-Working Class A Disquieting
-Survey](https://www.milkenreview.org/articles/the-male-non-working-class)
-
-[GOP favored by married people, Dems strongly supported by unmarried
-women, exit polls
-show](https://katv.com/news/nation-world/gop-favored-by-married-people-while-dems-strongly-supported-by-unmarried-women-exit-polls)
-
-[All the Single Democratic
-Ladies](https://www.aei.org/op-eds/all-the-single-democratic-ladies/)
-
-[Rising Share of U.S. Adults Are Living Without a Spouse or
-Partner](https://www.pewresearch.org/social-trends/2021/10/05/rising-share-of-u-s-adults-are-living-without-a-spouse-or-partner/)
-
-[In Changing U.S. Electorate, Race and Education Remain Stark Dividing
-Lines](https://www.pewresearch.org/politics/2020/06/02/in-changing-u-s-electorate-race-and-education-remain-stark-dividing-lines/)
-
-[Turnout in 2020 election spiked among both Democratic and Republican
-voting groups, new census data
-shows](https://www.brookings.edu/research/turnout-in-2020-spiked-among-both-democratic-and-republican-voting-groups-new-census-data-shows/)
-
-[Latinos support Democrats over Republicans 2-1 in House and Senate
-elections](https://www.brookings.edu/blog/fixgov/2022/11/11/latinos-support-democrats-over-republicans-2-1-in-house-and-senate-elections/)
-
-[Are Latinos becoming more Republican? Or just more
-American](https://thehill.com/opinion/campaign/3715068-are-latinos-becoming-more-republican-or-just-more-american/)
-
-[The new swing vote: Why more Latino voters are joining the
-GOP](https://www.csmonitor.com/USA/Politics/2022/1021/The-new-swing-vote-Why-more-Latino-voters-are-joining-the-GOP)
-
-[The Latino vote shifted toward Republicans in 2020. Will it
-again?](https://www.washingtonpost.com/politics/interactive/2022/election-2022-latino-voters/)

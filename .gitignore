@@ -1,11 +1,33 @@
-.Rproj.user
+# R and RStudio files
+.Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
-2020_presidential_election_cache
+.Renviron
 
+# R Markdown cache and output files
+*_cache/
+*_files/
+
+# OS generated files
 .DS_Store
-gap_statistic.R
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-old_code.R
+# Personal/temporary files
 scratch.txt
+scratch.*
+old_code.*
+temp.*
+test.*
+
+# Logs
+*.log
+
+# IDE files
+.vscode/
+.idea/

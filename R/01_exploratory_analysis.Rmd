@@ -70,7 +70,7 @@ The following code load in these two data sets: `election.raw` and `census.`
 ## In Problem 5 we will reproduce this variable!
 election.raw <- read_csv("data/raw/candidates_county.csv", col_names = TRUE) %>% 
   mutate(candidate = as.factor(candidate), party = as.factor(party), won = NULL)
-
+getwd()
 
 ## remove the word "County" from the county names
 words.to.remove = c("County")
@@ -327,96 +327,13 @@ new_state <- new_state %>%
 ```
 
 
-```{r}
-counties
-county.winner
-```
-
-```{r echo=FALSE}
-# counties <- map_data("county") # head(counties)
-# Count the total number of missing values in the data frame
-sum(is.na(new_counties))
-unique(new_counties[!complete.cases(new_counties),]["region"])
-new_counties[!complete.cases(new_counties),]
-
-# color legend is unnecessary and takes too long
-```
-
-```{r}
-# Find counties that didn't match
-unmatched_counties <- new_counties %>%
-  filter(is.na(total_votes)) %>%  # or any column from county.winner
-  select(region, subregion) %>%
-  distinct()
-
-# See what we're missing
-head(unmatched_counties, 20)
-
-```
 
 
-### Drop Alaska
-
-```{r}
-# Get unique state-county combinations from each dataset
-counties_names <- counties %>%
-  select(region, subregion) %>%
-  distinct() %>%
-  arrange(region, subregion)
-
-county_winner_names <- county.winner %>%
-  select(state, county) %>%
-  distinct() %>%
-  arrange(state, county)
-
-county.winner[county.winner$state == "alaska", ]
-
-filter(counties_names, region == "alaska")
-
-filter(county.winner, state == "alaska")
 
 
-# Look at a specific state to compare naming differences
-state_to_check <- "alabama"  # or whatever state you want to examine
-
-counties_ca <- counties_names %>% filter(region == state_to_check)
-winner_ca <- county_winner_names %>% filter(state == state_to_check)
-
-# See the differences
-counties_ca
-winner_ca
 
 
-# Find counties in the map data but NOT in the election data
-in_counties_not_winner <- counties_names %>%
-  anti_join(county_winner_names, by = c("region" = "state", "subregion" = "county")) %>%
-  select(region, subregion)
 
-# Find counties in the election data but NOT in the map data  
-in_winner_not_counties <- county_winner_names %>%
-  anti_join(counties_names, by = c("state" = "region", "county" = "subregion")) %>%
-  select(state, county)
-
-# Display the results
-print("Counties in MAP data but not in ELECTION data:")
-print(in_counties_not_winner)
-
-print("Counties in ELECTION data but not in MAP data:")
-print(in_winner_not_counties)
-
-# Create a comparison dataframe
-max_length <- max(nrow(in_counties_not_winner), nrow(in_winner_not_counties))
-
-comparison <- data.frame(
-  map_only = c(in_counties_not_winner$region, in_counties_not_winner$subregion, 
-               rep(NA, max_length - nrow(in_counties_not_winner))),
-  election_only = c(in_winner_not_counties$state, in_winner_not_counties$county,
-                    rep(NA, max_length - nrow(in_winner_not_counties)))
-)
-
-print(comparison)
-
-```
 
 
 
