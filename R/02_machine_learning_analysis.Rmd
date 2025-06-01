@@ -1,5 +1,5 @@
 ---
-title: "Analysis of the 2020 Presidential Election"
+title: "ML Analysis of the 2020 Presidential Election"
 author: "Alexander Sanchez"
 date: "2030-01-01"
 output: github_document
@@ -34,6 +34,9 @@ library(Matrix)
 library(arules)
 library(cluster)
 library(arulesViz)
+library(ggplot2)
+library(dplyr)
+library(patchwork)
 #update.packages()
 # set global chunk options: images will be 8x5 inches
 knitr::opts_chunk$set(fig.width=8, fig.height=5)
@@ -71,7 +74,6 @@ The following code load in these two data sets: `election.raw` and `census.`
 election.raw <- read_csv("../data/raw/candidates_county.csv", col_names = TRUE) %>% 
   mutate(candidate = as.factor(candidate), party = as.factor(party), won = NULL)
 
-getwd()
 ## remove the word "County" from the county names
 words.to.remove = c("County")
 remove.words <- function(str, words.to.remove){
@@ -88,79 +90,6 @@ election.raw$county <- remove.words(election.raw$county, words.to.remove)
 census <- read_csv("../data/raw/census_county.csv") 
 ```
 
-# Exploratory Data Analysis
-
-## Election Data
-
-**1.  (1 pts) Compute the total number of distinct values in state in election.raw to verify that the data contains all states and a federal district**
-
-The following is the first few rows of the `election.raw` data.
-
-```{r echo=FALSE}
-head(election.raw)
-```
-
-Checking dimensions of `election.raw` data set.
-```{r echo=FALSE}
-dim(election.raw)
-```
-
-Checking for missing values in `election.raw` data set. 
-```{r echo=FALSE}
-ifelse(sum(is.na(election.raw)) == 0 , "There are no missing values", "There are missing values")
-```
-
-Checking unique vlaues for each column
-```{r echo=FALSE}
-sapply(election.raw, function(x) n_distinct(x))
-```
-
-
-```{r echo=FALSE}
-unique_counties_per_state <- election.raw %>%
-  distinct(state, county) %>%
-  arrange(state, county)
-```
-
-## Census data
-
-The following is the first few rows of the `census` data. The column names are all very self-explanatory:
-
-```{r echo=FALSE}
-head(census)
-```
-
-**2. (1 pts) Report the dimension of `census`. (1 pts) Are there missing values in the data set? (1 pts) Compute the total number of distinct values in `county` in `census`. (1 pts) Compare the values of total number of distinct county in `census` with that in `election.raw`. (1 pts) Comment on your findings.**
-
-Checking dimensions of `census` data set.
-```{r echo=FALSE}
-dim(census)
-```
-
-Checking for missing values in `census` data set.
-```{r echo=FALSE}
-ifelse(sum(is.na(census)) == 0 , "There are no missing values", "There are missing values")
-```
-
-
-Which column has missing values?
-```{r echo=FALSE}
-column_missing <- colSums(is.na(census))
-print(column_missing[column_missing > 0])
-```
-
-
-
-```{r echo=FALSE}
-sapply(census, function(x) n_distinct(x))[3]
-```
-There are more distinct counties in `election.raw` than in `census`. Grouping them by state and county (some states have the same county names), `census` has around 3,220 counties, while `election.raw` has 4,633 counties. Upon closer examination of state and county, we see that some counties are named differently despite being from the same state county. Also, `census` has one more state than `election.raw` since `census` includes Puerto Rico.
-
-```{r echo=FALSE}
-unique_counties_per_state <- census %>%
-  distinct(CountyId) %>%
-  arrange(CountyId)
-```
 
 # Data Wrangling
 
@@ -354,10 +283,10 @@ pca_df <- data.frame(
 )
 
 # Individual PVE plot
-ggplot(pca_df, aes(x=component, y=proportion_variance)) + 
+p1 <- ggplot(pca_df, aes(x=component, y=proportion_variance)) + 
   geom_point(size=2) +
   geom_line(linewidth=1) + 
-  labs(title = "Individual PVE plot",
+  labs(title = "Individual PVE",
        x = "Principal Component", 
        y = "Proportion of Variance Explained") +
   theme_minimal() +
@@ -367,15 +296,16 @@ ggplot(pca_df, aes(x=component, y=proportion_variance)) +
     axis.text = element_text(size = 10),
     panel.grid.minor = element_blank()
   ) +
-  scale_x_continuous(breaks = seq(1, dim(pca_df)[1], 2))
+  scale_x_continuous(breaks = seq(1, dim(pca_df)[1], 2)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
 
 # Cumulative PVE plot
-ggplot(pca_df, aes(x=component, y=cumsum(proportion_variance))) + 
+p2 <- ggplot(pca_df, aes(x=component, y=cumsum(proportion_variance))) + 
   geom_point(size=2) +
   geom_line(linewidth=1) + 
-  labs(title = "Cumulative Proportion of Variance Explained",
+  labs(title = "Cumulative PVE",
        x = "Principal Component", 
-       y = "Proportion of Variance Explained") +
+       y = "Cumulative Proportion") +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
@@ -383,7 +313,16 @@ ggplot(pca_df, aes(x=component, y=cumsum(proportion_variance))) +
     axis.text = element_text(size = 10),
     panel.grid.minor = element_blank()
   ) +
-  scale_x_continuous(breaks = seq(1, dim(pca_df)[1], 2))
+  scale_x_continuous(breaks = seq(1, dim(pca_df)[1], 2)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+
+
+# Combine plots
+p1 + p2 + 
+  plot_annotation(
+    title = "PCA Variance Explained Analysis", 
+    theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+    )
 ```
 
 

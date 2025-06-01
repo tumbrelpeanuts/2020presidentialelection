@@ -1,4 +1,4 @@
-Analysis of the 2020 Presidential Election
+ML Analysis of the 2020 Presidential Election
 ================
 Alexander Sanchez
 2030-01-01
@@ -26,93 +26,6 @@ which is available here.
 
 The following code load in these two data sets: `election.raw` and
 `census.`
-
-    ## [1] "/Users/dsanch/GitHub_Projects/2020_presidential_election/R"
-
-# Exploratory Data Analysis
-
-## Election Data
-
-**1. (1 pts) Compute the total number of distinct values in state in
-election.raw to verify that the data contains all states and a federal
-district**
-
-The following is the first few rows of the `election.raw` data.
-
-    ## # A tibble: 6 × 5
-    ##   state    county     candidate     party total_votes
-    ##   <chr>    <chr>      <fct>         <fct>       <dbl>
-    ## 1 Delaware Kent       Joe Biden     DEM         44552
-    ## 2 Delaware Kent       Donald Trump  REP         41009
-    ## 3 Delaware Kent       Jo Jorgensen  LIB          1044
-    ## 4 Delaware Kent       Howie Hawkins GRN           420
-    ## 5 Delaware New Castle Joe Biden     DEM        195034
-    ## 6 Delaware New Castle Donald Trump  REP         88364
-
-Checking dimensions of `election.raw` data set.
-
-    ## [1] 32177     5
-
-Checking for missing values in `election.raw` data set.
-
-    ## [1] "There are no missing values"
-
-Checking unique vlaues for each column
-
-    ##       state      county   candidate       party total_votes 
-    ##          51        2825          38          26        6762
-
-## Census data
-
-The following is the first few rows of the `census` data. The column
-names are all very self-explanatory:
-
-    ## # A tibble: 6 × 37
-    ##   CountyId State  County TotalPop   Men  Women Hispanic White Black Native Asian
-    ##      <dbl> <chr>  <chr>     <dbl> <dbl>  <dbl>    <dbl> <dbl> <dbl>  <dbl> <dbl>
-    ## 1     1001 Alaba… Autau…    55036 26899  28137      2.7  75.4  18.9    0.3   0.9
-    ## 2     1003 Alaba… Baldw…   203360 99527 103833      4.4  83.1   9.5    0.8   0.7
-    ## 3     1005 Alaba… Barbo…    26201 13976  12225      4.2  45.7  47.8    0.2   0.6
-    ## 4     1007 Alaba… Bibb …    22580 12251  10329      2.4  74.6  22      0.4   0  
-    ## 5     1009 Alaba… Bloun…    57667 28490  29177      9    87.4   1.5    0.3   0.1
-    ## 6     1011 Alaba… Bullo…    10478  5616   4862      0.3  21.6  75.6    1     0.7
-    ## # ℹ 26 more variables: Pacific <dbl>, VotingAgeCitizen <dbl>, Income <dbl>,
-    ## #   IncomeErr <dbl>, IncomePerCap <dbl>, IncomePerCapErr <dbl>, Poverty <dbl>,
-    ## #   ChildPoverty <dbl>, Professional <dbl>, Service <dbl>, Office <dbl>,
-    ## #   Construction <dbl>, Production <dbl>, Drive <dbl>, Carpool <dbl>,
-    ## #   Transit <dbl>, Walk <dbl>, OtherTransp <dbl>, WorkAtHome <dbl>,
-    ## #   MeanCommute <dbl>, Employed <dbl>, PrivateWork <dbl>, PublicWork <dbl>,
-    ## #   SelfEmployed <dbl>, FamilyWork <dbl>, Unemployment <dbl>
-
-**2. (1 pts) Report the dimension of `census`. (1 pts) Are there missing
-values in the data set? (1 pts) Compute the total number of distinct
-values in `county` in `census`. (1 pts) Compare the values of total
-number of distinct county in `census` with that in `election.raw`. (1
-pts) Comment on your findings.**
-
-Checking dimensions of `census` data set.
-
-    ## [1] 3220   37
-
-Checking for missing values in `census` data set.
-
-    ## [1] "There are missing values"
-
-Which column has missing values?
-
-    ## ChildPoverty 
-    ##            1
-
-    ## County 
-    ##   1955
-
-There are more distinct counties in `election.raw` than in `census`.
-Grouping them by state and county (some states have the same county
-names), `census` has around 3,220 counties, while `election.raw` has
-4,633 counties. Upon closer examination of state and county, we see that
-some counties are named differently despite being from the same state
-county. Also, `census` has one more state than `election.raw` since
-`census` includes Puerto Rico.
 
 # Data Wrangling
 
@@ -222,7 +135,7 @@ including
 Minority, Poverty, ChildPoverty, Service, Office, Production, Drive,
 Carpool, OtherTransp, MeanCommute, Unemployment
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 Notably, Poverty and ChildPoverty have negative loadings and large
 magnitudes. Features with opposite signs in the principal component
@@ -262,7 +175,7 @@ explained variance accumulates as more principal components are
 included, allowing us to see the incremental contribution of each
 additional component to the total variance explained.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 # Clustering
 
@@ -381,7 +294,7 @@ voting behavior.
 
 Decision Tree purity
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 From our function `cv.tree()`, the best size is 10.
 
@@ -416,9 +329,9 @@ ggplot(cv_data, aes(x = size, y = error)) +
   )  # Highlight minimum error point
 ```
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 **Both trees have Transit first followed by White and Women. Before
 pruning, White was right below Women, but in after pruning, White is at
@@ -575,11 +488,11 @@ the tree method, logistic regression, and the lasso logistic regression?
 
     ## Warning: Setting row names on a tibble is deprecated.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-68-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-70-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-59-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-71-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
 
 **Answer:**
 

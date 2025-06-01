@@ -1,4 +1,4 @@
-Analysis of the 2020 Presidential Election
+Exploratory Analysis of the 2020 Presidential Election
 ================
 Alexander Sanchez
 2030-01-01
@@ -27,15 +27,13 @@ which is available here.
 The following code load in these two data sets: `election.raw` and
 `census.`
 
-    ## [1] "/Users/dsanch/GitHub_Projects/2020_presidential_election"
-
 # Exploratory Data Analysis
 
 ## Election Data
 
-**1. (1 pts) Compute the total number of distinct values in state in
-election.raw to verify that the data contains all states and a federal
-district**
+**Before we perform any data visualization, we will analyze the
+election.raw dataset, including examining the data structure and
+ensuring that it includes all states and a federal district.**
 
 The following is the first few rows of the `election.raw` data.
 
@@ -57,10 +55,11 @@ Checking for missing values in `election.raw` data set.
 
     ## [1] "There are no missing values"
 
-Checking unique vlaues for each column
+Ensuring that it includes all states and a federal district
 
-    ##       state      county   candidate       party total_votes 
-    ##          51        2825          38          26        6762
+    ## [1] "Number of distinct states/districts: 51"
+
+    ## [1] "Confirmed: Data contains all 50 states and federal district"
 
 ## Census data
 
@@ -84,11 +83,12 @@ names are all very self-explanatory:
     ## #   MeanCommute <dbl>, Employed <dbl>, PrivateWork <dbl>, PublicWork <dbl>,
     ## #   SelfEmployed <dbl>, FamilyWork <dbl>, Unemployment <dbl>
 
-**2. (1 pts) Report the dimension of `census`. (1 pts) Are there missing
-values in the data set? (1 pts) Compute the total number of distinct
-values in `county` in `census`. (1 pts) Compare the values of total
-number of distinct county in `census` with that in `election.raw`. (1
-pts) Comment on your findings.**
+### Census Data Exploration and Comparison with Election Data
+
+**Next, we will examine the structure and completeness of the census
+dataset, identify any missing values, and compare the geographic
+coverage between the census and election datasets to understand
+potential data integration challenges.**
 
 Checking dimensions of `census` data set.
 
@@ -103,16 +103,15 @@ Which column has missing values?
     ## ChildPoverty 
     ##            1
 
-    ## County 
-    ##   1955
-
-There are more distinct counties in `election.raw` than in `census`.
+There are more distinct counties in `election.raw` than in `census.`
 Grouping them by state and county (some states have the same county
-names), `census` has around 3,220 counties, while `election.raw` has
-4,633 counties. Upon closer examination of state and county, we see that
-some counties are named differently despite being from the same state
-county. Also, `census` has one more state than `election.raw` since
-`census` includes Puerto Rico.
+names), `census` has around 3220 counties, while `election.raw` has 4633
+counties. Additionally, `census` has one more state than `election.raw`,
+as `census` includes Puerto Rico. Examining both datasets reveals that
+counties have different naming conventions despite referring to the same
+geographic areas. For example, Alabama appears as ‘Autauga County’ in
+`census` but ‘Autauga’ in `election.raw.` This naming inconsistency will
+need to be resolved when merging the datasets.
 
 # Data Wrangling
 
@@ -125,44 +124,51 @@ i.e.,**
 
 <!-- -->
 
-    ##      candidate  county   state total_votes
-    ## 1 Donald Trump Autauga Alabama       19838
-    ## 2 Jo Jorgensen Autauga Alabama         350
-    ## 3    Joe Biden Autauga Alabama        7503
-    ## 4    Write-ins Autauga Alabama          79
-    ## 5 Donald Trump Baldwin Alabama       83544
-    ## 6 Jo Jorgensen Baldwin Alabama        1229
-
-    ##         candidate   state total_votes
-    ## 1    Donald Trump Alabama     1441168
-    ## 2    Jo Jorgensen Alabama       25176
-    ## 3       Joe Biden Alabama      849648
-    ## 4       Write-ins Alabama        7312
-    ## 5    Brock Pierce  Alaska         825
-    ## 6 Don Blankenship  Alaska        1127
-
-**4. (1 pts) How many named presidential candidates were there in the
-2020 election? (2 pts) Draw a bar chart of all votes received by each
-candidate. You can split this into multiple plots or may prefer to plot
-the results on a log scale. Either way, the results should be clear and
-legible! (For fun: spot Kanye West among the presidential candidates!)**
-
-There were about 36 presidential candidates in the 2020 election, not
-counting write-ins and none of these candidates.
-
-    ## There were 37 named presidential candidates in the 2020 election.
+    ## # A tibble: 6 × 3
+    ##   candidate      state      total_votes
+    ##   <fct>          <chr>            <dbl>
+    ## 1 Alyson Kennedy Colorado           354
+    ## 2 Alyson Kennedy Louisiana          536
+    ## 3 Alyson Kennedy Minnesota          643
+    ## 4 Alyson Kennedy Tennessee         2576
+    ## 5 Alyson Kennedy Vermont            195
+    ## 6 Alyson Kennedy Washington        2487
 
     ## # A tibble: 6 × 2
-    ##   candidate          total_votes
-    ##   <fct>                    <dbl>
-    ## 1 Joe Biden             82046434
-    ## 2 Donald Trump          74585705
-    ## 3 Jo Jorgensen           1874183
-    ## 4 Howie Hawkins           404835
-    ## 5 Write-ins               254274
-    ## 6 Rocky De La Fuente       88158
+    ##   candidate      total_votes
+    ##   <fct>                <dbl>
+    ## 1 Alyson Kennedy        6791
+    ## 2 Bill Hammons          6647
+    ## 3 Blake Huber            409
+    ## 4 Brian Carroll        25256
+    ## 5 Brock Pierce         49552
+    ## 6 Brooke Paige          1175
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-3.png)<!-- -->![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-4.png)<!-- -->![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-5.png)<!-- -->![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-6.png)<!-- -->![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-7.png)<!-- -->![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-8.png)<!-- -->
+The 2020 presidential election featured 36 named candidates on ballots
+across the United States, excluding “Write-ins” votes and “None of these
+candidates” options. This analysis examines the vote distribution among
+all candidates to understand the electoral landscape.
+
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+The vote totals reveal a stark bifurcation in the American electoral
+system. As shown in the visualization below, the two major party
+candidates—Joe Biden (Democratic) and Donald Trump
+(Republican)—dominated the election, receiving over 74 million votes
+each. In contrast, all other candidates combined received significantly
+fewer votes, with the highest third-party candidate earning under 2
+million votes.
+
+This dramatic difference in vote scale necessitates a two-panel
+visualization approach. The upper panel displays the major party
+candidates using a linear scale, clearly showing Biden’s victory margin
+of approximately 7 million votes. The lower panel focuses on third-party
+and independent candidates, using a logarithmic scale to facilitate
+meaningful comparisons within this group.
+
+The data illustrates how the American two-party system creates
+substantial barriers for third-party candidates, regardless of their
+public profile.
 
 **5. (6 pts) Create data sets county.winner and state.winner by taking
 the candidate with the highest proportion of votes in both county level
@@ -238,6 +244,12 @@ census data.** Many exit polls noted that demographics played a big role
 in the election. Use this Washington Post article and this R graph
 gallery for ideas and inspiration.
 
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+
     ## Warning: The `guide` argument in `scale_*()` cannot be `FALSE`. This was deprecated in
     ## ggplot2 3.3.4.
     ## ℹ Please use "none" instead.
@@ -245,62 +257,8 @@ gallery for ideas and inspiration.
     ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
     ## generated.
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
-
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
-
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
-
 ![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
-
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
-
-# Data Cleaning
-
-We start by cleaning the county-level census data through several
-transformations. Initially, we remove any rows with missing values using
-`na.omit()` and `filter()`. Then, we convert three attributes (Men,
-Employed, and VotingAgeCitizen) to percentages by dividing each by
-TotalPop and multiplying by 100. The code creates a new Minority
-attribute by combining Hispanic, Black, Native, Asian, and Pacific
-populations and removes these original variables after creating the
-Minority column using the `.keep = "unused" argument.` The Minority
-column is then relocated to appear after the White column for better
-organization.
-
-The code removes several specified columns that are not needed for the
-analysis: IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork,
-and Construction.
-
-``` r
-census.clean <- census %>%
-  na.omit() %>%
-  filter(if_any(everything(), ~ !is.na(.))) %>%
-  mutate(Men = (Men/TotalPop) * 100) %>%
-  mutate(Women = (Women/TotalPop) * 100) %>%
-  mutate(Employed = (Employed/TotalPop) * 100) %>%
-  mutate(VotingAgeCitizen = (VotingAgeCitizen/TotalPop) * 100) %>%
-  mutate(Minority = Hispanic + Black + Native + Asian + Pacific, .keep = "unused") %>% # remove columns used to create Minority
-  relocate(Minority, .after = White) %>%
-  select(-c(IncomeErr, IncomePerCap, IncomePerCapErr, Walk, PublicWork, Construction))
-
-head(census.clean, 5)
-```
-
-    ## # A tibble: 5 × 27
-    ##   CountyId State   County   TotalPop   Men Women White Minority VotingAgeCitizen
-    ##      <dbl> <chr>   <chr>       <dbl> <dbl> <dbl> <dbl>    <dbl>            <dbl>
-    ## 1     1001 Alabama Autauga…    55036  48.9  51.1  75.4     22.8             74.5
-    ## 2     1003 Alabama Baldwin…   203360  48.9  51.1  83.1     15.4             76.4
-    ## 3     1005 Alabama Barbour…    26201  53.3  46.7  45.7     52.8             77.4
-    ## 4     1007 Alabama Bibb Co…    22580  54.3  45.7  74.6     24.8             78.2
-    ## 5     1009 Alabama Blount …    57667  49.4  50.6  87.4     10.9             73.7
-    ## # ℹ 18 more variables: Income <dbl>, Poverty <dbl>, ChildPoverty <dbl>,
-    ## #   Professional <dbl>, Service <dbl>, Office <dbl>, Production <dbl>,
-    ## #   Drive <dbl>, Carpool <dbl>, Transit <dbl>, OtherTransp <dbl>,
-    ## #   WorkAtHome <dbl>, MeanCommute <dbl>, Employed <dbl>, PrivateWork <dbl>,
-    ## #   SelfEmployed <dbl>, FamilyWork <dbl>, Unemployment <dbl>
