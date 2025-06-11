@@ -1,7 +1,6 @@
 Exploratory Analysis of the 2020 Presidential Election
 ================
 Alexander Sanchez
-2030-01-01
 
 # Instructions and Expectations
 
@@ -177,35 +176,23 @@ group by state and county, compute total votes, and pct = votes/total as
 the proportion of votes. Then choose the highest row using top_n
 (variable state.winner is similar).**
 
-    ## # A tibble: 6 × 7
-    ##   state                county           candidate party total_votes  total   pct
-    ##   <chr>                <chr>            <fct>     <fct>       <dbl>  <dbl> <dbl>
-    ## 1 delaware             kent             Joe Biden DEM         44552  87025 0.512
-    ## 2 delaware             new castle       Joe Biden DEM        195034 287633 0.678
-    ## 3 delaware             sussex           Donald T… REP         71230 129352 0.551
-    ## 4 district of columbia district of col… Joe Biden DEM         39041  41681 0.937
-    ## 5 district of columbia ward 2           Joe Biden DEM         29078  32881 0.884
-    ## 6 district of columbia ward 3           Joe Biden DEM         39397  44231 0.891
-
-    ## # A tibble: 6 × 5
-    ##   state      candidate    party total_state_votes   pct
-    ##   <chr>      <fct>        <fct>             <dbl> <dbl>
-    ## 1 alabama    Donald Trump REP             1441168 0.620
-    ## 2 alaska     Donald Trump REP              189892 0.485
-    ## 3 arizona    Joe Biden    DEM             1672143 0.494
-    ## 4 arkansas   Donald Trump REP              760647 0.624
-    ## 5 california Joe Biden    DEM            11109764 0.635
-    ## 6 colorado   Joe Biden    DEM             1804352 0.554
-
 # Visualization
-
-Visualization is crucial for gaining insight and intuition during data
-mining. We will map our data onto maps.
 
 The R package ggplot2 can be used to draw maps. Consider the following
 code.
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+``` r
+states <- map_data("state")
+
+ggplot(data = states) + 
+  geom_polygon(aes(x = long, y = lat, fill = region, group = group),
+               color = "white") + 
+  coord_fixed(1.3) +
+  theme_void() + # removes 
+  guides(fill="none")  # color legend is unnecessary and takes too long
+```
+
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 The variable states contain information to draw white polygons, and
 fill-colors are determined by region.
@@ -213,52 +200,30 @@ fill-colors are determined by region.
 **6. (4 pts) Use similar code to above to draw county-level map by
 creating counties = map_data(“county”). Color by county.**
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
-Now color the map by the winning candidate for each state. First,
-combine states variable and state.winner we created earlier using
-left_join(). Note that left_join() needs to match up values of states to
-join the tables. A call to left_join() takes all the values from the
-first table and looks for matches in the second table. If it finds a
-match, it adds the data from the second table; if not, it adds missing
-values:
-
-Here, we’ll be combing the two data sets based on state name. However,
-the state names in states and state.winner can be in different formats:
-check them! Before using left_join(), use certain transform to make sure
-the state names in the two data sets: states (for map drawing) and
-state.winner (for coloring) are in the same formats. Then left_join().
-Your figure will look similar to New York Times map. .winner, state)
-
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 **8. (6 pts) Color the map of the state of California by the winning
 candidate for each county.**
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
-
 ![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 **9. (4 pts) (Open-ended) Create a visualization of your choice using
 census data.** Many exit polls noted that demographics played a big role
 in the election. Use this Washington Post article and this R graph
 gallery for ideas and inspiration.
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
-
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
-    ## Warning: The `guide` argument in `scale_*()` cannot be `FALSE`. This was deprecated in
-    ## ggplot2 3.3.4.
-    ## ℹ Please use "none" instead.
-    ## This warning is displayed once every 8 hours.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
 ![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
-![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 ![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+
+![](01_exploratory_analysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->

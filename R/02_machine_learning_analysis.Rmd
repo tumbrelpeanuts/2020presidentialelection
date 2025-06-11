@@ -1,7 +1,6 @@
 ---
 title: "ML Analysis of the 2020 Presidential Election"
 author: "Alexander Sanchez"
-date: "2030-01-01"
 output: github_document
 ---
 
@@ -110,7 +109,6 @@ county.winner <- election.raw %>%
   top_n(1,pct) %>%
   ungroup()
 
-head(county.winner)
 ```
 
 ```{r echo=FALSE, error=FALSE, message=FALSE}
@@ -127,8 +125,6 @@ state.winner <- election.raw %>%
   select(state, candidate, party, total_state_votes, pct)
 
 # election.raw %>% select(state, county) %>% distinct()
-
-head(state.winner)
 ```
 
 
@@ -194,7 +190,7 @@ negative_loadings <- new_p[new_p < 0]
 `r names(negative_loadings)`
 
 
-```{r message=FALSE, warnings=FALSE, results='hide', echo=FALSE, fig.height = 8, fig.width = 6}
+```{r message=FALSE, warnings=FALSE, results='hide', echo=FALSE, fig.height = 8, fig.width = 12}
 # Extract loadings
 loading_df <- data.frame(
   Taxon = colnames(temp_census.clean),  # Replace with the actual dataset column names
@@ -219,8 +215,8 @@ base <- ggplot(loading_plot_df, aes(x = Loading, y = Taxon, color = Principal_Co
     axis.text.y = element_text(size = 8),
     axis.text.x = element_text(size = 7),
     axis.title = element_text(size = 14),
-    strip.text = element_text(size = 14)
-  ) +
+    strip.text = element_text(size = 14)  
+    ) +
   labs(x = "Loading", y = "", color = "Principal Component")
 
 fig7 <- base + facet_wrap(~Principal_Component, ncol = 2)
@@ -258,7 +254,9 @@ The code calculates the proportion of variance explained (PVE) for each principa
 
 ```{r}
 x <- pr.out.census$sdev
+
 pr.var <- x^2
+
 pve <- pr.var/sum(pr.var)
 ```
 
@@ -320,7 +318,7 @@ p2 <- ggplot(pca_df, aes(x=component, y=cumsum(proportion_variance))) +
 # Combine plots
 p1 + p2 + 
   plot_annotation(
-    title = "PCA Variance Explained Analysis", 
+    title = "PCA Variance Analysis", 
     theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
     )
 ```
@@ -358,14 +356,21 @@ census.clean.hclust <- hclust(census.clean.dist)
 set.seed(10)
 # Get cluster
 clus <- cutree(census.clean.hclust, 10)
+table_data <- as.data.frame(table(clus))
 ```
 
 ### First Clustering (Original Features):
-When performing hierarchical clustering using the scaled original features with complete linkage and cutting the tree into 10 clusters, the distribution of observations across clusters is quite uneven. Cluster 1 contains the most observations, with 2,967 counties, while several other clusters have very few counties. For instance, clusters 9 and 10 have only 4 and 1 counties, respectively, indicating that the clustering algorithm identified a few very distinct groups among the counties.
+When performing hierarchical clustering using the scaled original features with complete linkage and cutting the tree into 10 clusters, the distribution of observations across clusters is quite uneven. Cluster 1 contains the most observations, with `r table(clus)["1"]` counties, while several other clusters have very few counties. For instance, clusters 6 and 10 have only `r table(clus)["6"]` and `r table(clus)["10"]` counties, respectively, indicating that the clustering algorithm identified a few very distinct groups among the counties.
 ```{r echo=FALSE}
-table_data <- as.data.frame(table(clus))
-
-table(clus)
+# table(clus)
+ggplot(table_data, aes(x = factor(clus), y = Freq)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+  geom_text(aes(label = Freq), vjust = -0.3, size = 3) +
+  labs(title = "County Distribution",
+       x = "Cluster",
+       y = "Number of Counties") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
 ```
 
 
@@ -377,15 +382,21 @@ census_transform.dist <- dist(pc.county)
 set.seed(10)
 census_transform.hclust <- hclust(census_transform.dist)
 clus_new <- cutree(census_transform.hclust, 10)
+table_data <- as.data.frame(table(clus_new))
 ```
 
 
 ### Second Clustering (First Two Principal Components):
-The cluster distribution changes significantly after re-running the hierarchical clustering using the first two principal components from pc.county. Cluster 1 contains 1,670 counties, cluster 7 has 648 counties, and Cluster 2 has 563 counties. The remaining clusters have fewer counties, but the distribution differs from the first clustering.
+The cluster distribution changes significantly after re-running the hierarchical clustering using the first two principal components from pc.county. Cluster 1 contains `r table(clus_new)["1"]` counties, cluster 2 has `r table(clus_new)["2"]` counties, and Cluster 4 has `r table(clus_new)["4"]` counties. The remaining clusters have fewer counties, but the distribution differs from the first clustering.
 ```{r echo=FALSE}
-table_data <- as.data.frame(table(clus_new))
-
-table(clus_new)
+ggplot(table_data, aes(x = factor(clus_new), y = Freq)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+  geom_text(aes(label = Freq), vjust = -0.3, size = 3) +
+  labs(title = "County Distribution",
+       x = "Cluster",
+       y = "Number of Counties") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5)) 
 ```
 
 What can we take out of this
@@ -460,7 +471,7 @@ election.cl = election.cl %>% select(-c(county, party, CountyId, state, total_vo
 ```
 
 
-# Classification
+## Train/Test Split
 
 Using the following code, partition data into 80% training and 20% testing:
 
@@ -506,14 +517,23 @@ title("Single Tree Built on Training Set")
 ```
 
 ```{r echo=FALSE}
-set.seed(20)
+set.seed(10)
 cv.election <- cv.tree(tree.election, FUN = prune.misclass, rand = folds)
-best_size <- cv.election$size[which.min(cv.election$dev)]
+
+# Find all sizes with minimum error
+min_error <- min(cv.election$dev)
+best_sizes <- cv.election$size[cv.election$dev == min_error]
+
+# The largest size among tied minimums
+best_size_max <- max(best_sizes)
+
+# The smallest size among tied minimums
+best_size_min <- min(best_sizes)
 ```
 
-From our function `cv.tree()`, the best size is `r best_size`.
+From our function `cv.tree()`, the best size is `r best_size_min`.
 
-```{r}
+```{r echo=FALSE}
 cv_data <- data.frame(
   size = cv.election$size,
   error = cv.election$dev
@@ -537,22 +557,22 @@ ggplot(cv_data, aes(x = size, y = error)) +
   ) +
   scale_x_continuous(breaks = unique(cv_data$size)) +  # All tree sizes on x-axis
   geom_point(
-    data = cv_data[which.min(cv_data$error), ],
+    data = cv_data[cv_data$error == min(cv_data$error), ],
     aes(x = size, y = error),
     color = "red",
-    size = 4
+    size = 4 
   )  # Highlight minimum error point
 ```
 
 ```{r echo=FALSE}
 # Prune Tree
-pt.cv <- prune.misclass(tree.election, best = best_size)
+pt.cv <- prune.misclass(tree.election, best = best_size_min)
 ```
 
 ```{r echo=FALSE}
 # Plot Pruned Tree
-draw.tree(pt.cv, nodeinfo=TRUE, cex = 0.8)
-title(paste("Pruned Tree of Size ", best_size))
+draw.tree(pt.cv, nodeinfo=TRUE, cex = 0.5)
+title(paste("Pruned Tree of Size ", best_size_min))
 ```
 
 
@@ -586,8 +606,34 @@ For interpretable machine learning
 glm.obj.election <- glm(candidate~.,data = election.tr, family = binomial)
 ```
 
+
 ```{r echo=FALSE}
-set.seed(20) 
+# Traditional statistical significance approach
+model_summary <- summary(glm.obj.election)
+coef_table <- model_summary$coefficients
+
+# Variables with p < 0.05
+significant_vars <- rownames(coef_table)[coef_table[,4] < 0.05]
+significant_vars <- significant_vars[significant_vars != "(Intercept)"]  # Remove intercept
+
+#print(coef_table[coef_table[,4] < 0.05, ])
+```
+
+Using traditional $p < 0.05$ criteria, the significant variables are `r significant_vars`. White is included, but Women and Minority are not among the top 5. It does deviate from the Decision Tree analysis. However, with our large sample size (n = 2,408), nearly all non-zero coefficients will appear statistically significant, making this criterion less meaningful for practical variable selection.
+
+
+```{r echo=FALSE}
+# Get odds ratios for all coefficients
+odds_ratios <- exp(glm.obj.election$coefficients[-1]) # Remove intercept
+
+# Focus on meaningful magnitudes - set your own thresholds
+meaningful_effects <- odds_ratios[abs(log(odds_ratios)) > log(1.2)]  # >20% change in odds
+print(meaningful_effects)
+```
+
+
+```{r echo=FALSE}
+set.seed(10)
 prob.training <- predict(glm.obj.election, election.tr, type="response")
 prob.test <- predict(glm.obj.election, election.te, type="response")
 
@@ -611,17 +657,13 @@ d <- calc_error_rate(pred_test, election.te$candidate)
 records[2,] <- c(c,d)
 ```
 
-```{r echo=FALSE}
-# summary(glm.obj.election)$coefficients
-```
 
 Below are the significant variables:
 ```{r echo=FALSE}
 tail(sort(abs(glm.obj.election$coefficients[2:24])), 5)
 ```
-White is included, but Women and Minority are not among the top 5. It does deviate from the Decision Tree analysis.
 
-If were to increase Production by one unit, holding the rest fixed, then applying the same logic to Professional, Employed, Service, and Unemployment, we would get percent in the odds:
+If we were to increase VotingAgeCitizen by one unit, holding the rest fixed, then applying the same logic to Unemployment, Unemployment, Employed, Professional, and Service, we would get a percent in the odds:
 ```{r echo=FALSE}
 (exp(tail(sort(glm.obj.election$coefficients[2:24]), 5)) - 1)*100
 ```
@@ -641,7 +683,6 @@ y.train = election.cl$candidate[idx.tr]
 x.test = dat[-idx.tr, ] 
 y.test <- election.cl$candidate[-idx.tr]
 ```
-
 
 
 
@@ -669,7 +710,7 @@ non_zero_coefficients <- dense_coefficients[dense_coefficients != 0, ]
 print(non_zero_coefficients)
 ```
 
-```{r}
+```{r echo=FALSE}
 set.seed(10)
 
 # Predict probabilities for training and test datasets
@@ -683,7 +724,7 @@ pred_test <- ifelse(prob.test > majority_rule, "Joe Biden", "Donald Trump")
 ```
 
 
-```{r}
+```{r echo=FALSE}
 # Training set confusion matrix and error calculation
 training_pred_table <- table(Predicted = pred_training, True = election.tr$candidate)
 percent_train <- sum(diag(training_pred_table)) / nrow(election.tr) * 100
@@ -859,7 +900,7 @@ test_data_scaled <- data.frame(
 )
 
 # Set seed for reproducibility
-set.seed(123)
+set.seed(10)
 
 # Train neural network
 nn_model <- nnet(

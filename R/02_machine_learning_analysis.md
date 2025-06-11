@@ -1,7 +1,6 @@
 ML Analysis of the 2020 Presidential Election
 ================
 Alexander Sanchez
-2030-01-01
 
 # Instructions and Expectations
 
@@ -35,26 +34,6 @@ and state level. Hint: to create county.winner, start with election.raw,
 group by state and county, compute total votes, and pct = votes/total as
 the proportion of votes. Then choose the highest row using top_n
 (variable state.winner is similar).**
-
-    ## # A tibble: 6 × 7
-    ##   state                county           candidate party total_votes  total   pct
-    ##   <chr>                <chr>            <fct>     <fct>       <dbl>  <dbl> <dbl>
-    ## 1 delaware             kent             Joe Biden DEM         44552  87025 0.512
-    ## 2 delaware             new castle       Joe Biden DEM        195034 287633 0.678
-    ## 3 delaware             sussex           Donald T… REP         71230 129352 0.551
-    ## 4 district of columbia district of col… Joe Biden DEM         39041  41681 0.937
-    ## 5 district of columbia ward 2           Joe Biden DEM         29078  32881 0.884
-    ## 6 district of columbia ward 3           Joe Biden DEM         39397  44231 0.891
-
-    ## # A tibble: 6 × 5
-    ##   state      candidate    party total_state_votes   pct
-    ##   <chr>      <fct>        <fct>             <dbl> <dbl>
-    ## 1 alabama    Donald Trump REP             1441168 0.620
-    ## 2 alaska     Donald Trump REP              189892 0.485
-    ## 3 arizona    Joe Biden    DEM             1672143 0.494
-    ## 4 arkansas   Donald Trump REP              760647 0.624
-    ## 5 california Joe Biden    DEM            11109764 0.635
-    ## 6 colorado   Joe Biden    DEM             1804352 0.554
 
 # Data Cleaning
 
@@ -161,7 +140,9 @@ each component’s variance by the total variance
 
 ``` r
 x <- pr.out.census$sdev
+
 pr.var <- x^2
+
 pve <- pr.var/sum(pr.var)
 ```
 
@@ -195,27 +176,21 @@ census.clean.hclust <- hclust(census.clean.dist)
 When performing hierarchical clustering using the scaled original
 features with complete linkage and cutting the tree into 10 clusters,
 the distribution of observations across clusters is quite uneven.
-Cluster 1 contains the most observations, with 2,967 counties, while
-several other clusters have very few counties. For instance, clusters 9
-and 10 have only 4 and 1 counties, respectively, indicating that the
+Cluster 1 contains the most observations, with 2924 counties, while
+several other clusters have very few counties. For instance, clusters 6
+and 10 have only 1 and 4 counties, respectively, indicating that the
 clustering algorithm identified a few very distinct groups among the
 counties.
-
-    ## clus
-    ##    1    2    3    4    5    6    7    8    9   10 
-    ## 2924  191    6    5   31    1   17    6   34    4
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ### Second Clustering (First Two Principal Components):
 
 The cluster distribution changes significantly after re-running the
 hierarchical clustering using the first two principal components from
-pc.county. Cluster 1 contains 1,670 counties, cluster 7 has 648
-counties, and Cluster 2 has 563 counties. The remaining clusters have
-fewer counties, but the distribution differs from the first clustering.
-
-    ## clus_new
-    ##    1    2    3    4    5    6    7    8    9   10 
-    ## 1433  924   94  601   15   90    1   21    8   32
+pc.county. Cluster 1 contains 1433 counties, cluster 2 has 924 counties,
+and Cluster 4 has 601 counties. The remaining clusters have fewer
+counties, but the distribution differs from the first clustering.
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 What can we take out of this
 
@@ -265,7 +240,7 @@ election.meta <- election.cl %>% select(c(county, party, CountyId, state, total_
 election.cl = election.cl %>% select(-c(county, party, CountyId, state, total_votes, pct, total))
 ```
 
-# Classification
+## Train/Test Split
 
 Using the following code, partition data into 80% training and 20%
 testing:
@@ -296,38 +271,7 @@ Decision Tree purity
 
 ![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
-From our function `cv.tree()`, the best size is 10.
-
-``` r
-cv_data <- data.frame(
-  size = cv.election$size,
-  error = cv.election$dev
-)
-
-# Create the plot
-ggplot(cv_data, aes(x = size, y = error)) +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 3) +
-  theme_minimal() +
-  labs(
-    title = "Cross-Validation Error vs Tree Size",
-    x = "Tree Size",
-    y = "Cross-Validation Error"
-  ) +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10),
-    panel.grid.minor = element_blank()
-  ) +
-  scale_x_continuous(breaks = unique(cv_data$size)) +  # All tree sizes on x-axis
-  geom_point(
-    data = cv_data[which.min(cv_data$error), ],
-    aes(x = size, y = error),
-    color = "red",
-    size = 4
-  )  # Highlight minimum error point
-```
+From our function `cv.tree()`, the best size is 6.
 
 ![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
@@ -358,17 +302,28 @@ terms of a unit change in the variables.
 
 For interpretable machine learning
 
+Using traditional $p < 0.05$ criteria, the significant variables are
+TotalPop, White, VotingAgeCitizen, Professional, Service, Office,
+Production, Drive, Carpool, Employed, PrivateWork, Unemployment. White
+is included, but Women and Minority are not among the top 5. It does
+deviate from the Decision Tree analysis. However, with our large sample
+size (n = 2,408), nearly all non-zero coefficients will appear
+statistically significant, making this criterion less meaningful for
+practical variable selection.
+
+    ## VotingAgeCitizen     Professional          Service            Drive 
+    ##           1.2270           1.3484           1.4201           0.8182 
+    ##         Employed       FamilyWork     Unemployment 
+    ##           1.3268           0.5958           1.3098
+
 Below are the significant variables:
 
     ## Unemployment     Employed Professional      Service   FamilyWork 
     ##       0.2699       0.2827       0.2989       0.3507       0.5178
 
-White is included, but Women and Minority are not among the top 5. It
-does deviate from the Decision Tree analysis.
-
-If were to increase Production by one unit, holding the rest fixed, then
-applying the same logic to Professional, Employed, Service, and
-Unemployment, we would get percent in the odds:
+If we were to increase VotingAgeCitizen by one unit, holding the rest
+fixed, then applying the same logic to Unemployment, Unemployment,
+Employed, Professional, and Service, we would get a percent in the odds:
 
     ## VotingAgeCitizen     Unemployment         Employed     Professional 
     ##            22.70            30.98            32.68            34.84 
@@ -409,29 +364,6 @@ optimal value of λ:
     ##        6.278e-02        2.807e-02        2.594e-02        2.465e-01 
     ##      PrivateWork     SelfEmployed       FamilyWork     Unemployment 
     ##        7.233e-02       -2.918e-02       -4.376e-01        2.370e-01
-
-``` r
-set.seed(10)
-
-# Predict probabilities for training and test datasets
-prob.training <- predict(lasso.model, type = "response", s = bestlam, newx = x.train)
-prob.test <- predict(lasso.model, type = "response", s = bestlam, newx = x.test)
-
-# Generate predictions using majority rule
-majority_rule <- 0.5
-pred_training <- ifelse(prob.training > majority_rule, "Joe Biden", "Donald Trump")
-pred_test <- ifelse(prob.test > majority_rule, "Joe Biden", "Donald Trump")
-```
-
-``` r
-# Training set confusion matrix and error calculation
-training_pred_table <- table(Predicted = pred_training, True = election.tr$candidate)
-percent_train <- sum(diag(training_pred_table)) / nrow(election.tr) * 100
-
-# Test set confusion matrix and error calculation
-test_pred_table <- table(Predicted = pred_test, True = election.te$candidate)
-percent_test <- sum(diag(test_pred_table)) / nrow(election.te) * 100
-```
 
 Unpenalized logistic regression: When taking their absolute values,
 Women and Income had low coefficients compared to the rest of the
@@ -488,11 +420,11 @@ the tree method, logistic regression, and the lasso logistic regression?
 
     ## Warning: Setting row names on a tibble is deprecated.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-57-1.png)<!-- -->
-
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-59-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-58-1.png)<!-- -->
 
 ![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
+
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
 
 **Answer:**
 
