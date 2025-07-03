@@ -198,6 +198,7 @@ named_candidates <- election.total %>%
 
 num_named_candidates <- n_distinct(named_candidates$candidate)
 ```
+
 The 2020 presidential election featured `r num_named_candidates` named candidates on ballots across the United States, excluding "Write-ins" votes and "None of these candidates" options. This analysis examines the vote distribution among all candidates to understand the electoral landscape.
 
 ```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}

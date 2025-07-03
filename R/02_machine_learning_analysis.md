@@ -549,21 +549,27 @@ between variables that might exist in actual voting behavior.
 
 ### Comparison with Decision Tree Analysis
 
-**Similarities:** - Both methods identify **White, VotingAgeCitizen, and
-Unemployment** as key predictors. - Both highlight the significance of
-**demographic composition** and **economic conditions** in voting
-behavior. - Both demonstrate that **higher unemployment** generally
-benefits Democratic candidates.
+**Similarities:**
 
-**Key Differences:** - **Geographic vs. Occupational Focus**: The
-decision tree emphasizes **Transit** (urbanization) as the main split,
-while logistic regression highlights **occupational categories**
-(Professional, Service) as the key predictors. - **Variable Selection**:
-Decision tree uses **TotalPop** for urban classification, but logistic
-regression shows **Service** and **Professional** occupations as more
-influential. - **Interpretability**: The decision tree provides clear
-geographic narratives (urban vs. rural), while logistic regression
-uncovers more detailed occupational and demographic effects.
+- Both methods identify **White, VotingAgeCitizen, and Unemployment** as
+  key predictors.
+- Both highlight the significance of **demographic composition** and
+  **economic conditions** in voting behavior.
+- Both demonstrate that **higher unemployment** generally benefits
+  Democratic candidates.
+
+**Key Differences:**
+
+- **Geographic vs. Occupational Focus**: The decision tree emphasizes
+  **Transit** (urbanization) as the main split, while logistic
+  regression highlights **occupational categories** (Professional,
+  Service) as the key predictors.
+- **Variable Selection**: Decision tree uses **TotalPop** for urban
+  classification, but logistic regression shows **Service** and
+  **Professional** occupations as more influential.
+- **Interpretability**: The decision tree provides clear geographic
+  narratives (urban vs. rural), while logistic regression uncovers more
+  detailed occupational and demographic effects.
 
 **General Analysis:** Both methods agree on the crucial role of
 demographic and economic factors in voting behavior, but they highlight

@@ -542,7 +542,7 @@ best_size_min <- min(best_sizes)
 
 We use cross-validation to find the optimal tree size that minimizes misclassification error:
 
-Cross-validation suggests the optimal tree size is r best_size_min nodes.
+Cross-validation suggests the optimal tree size is `r best_size_min nodes`.
 
 ```{r echo=FALSE}
 cv_data <- data.frame(
@@ -731,11 +731,13 @@ print(meaningful_effects)
 ### Comparison with Decision Tree Analysis 
 
 **Similarities:**
- - Both methods identify **White, VotingAgeCitizen, and Unemployment** as key predictors. 
+
+- Both methods identify **White, VotingAgeCitizen, and Unemployment** as key predictors. 
 - Both highlight the significance of **demographic composition** and **economic conditions** in voting behavior. 
 - Both demonstrate that **higher unemployment** generally benefits Democratic candidates. 
 
 **Key Differences:** 
+
 - **Geographic vs. Occupational Focus**: The decision tree emphasizes **Transit** (urbanization) as the main split, while logistic regression highlights **occupational categories** (Professional, Service) as the key predictors. 
 - **Variable Selection**: Decision tree uses **TotalPop** for urban classification, but logistic regression shows **Service** and **Professional** occupations as more influential. 
 - **Interpretability**: The decision tree provides clear geographic narratives (urban vs. rural), while logistic regression uncovers more detailed occupational and demographic effects. 
