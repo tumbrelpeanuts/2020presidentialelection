@@ -108,14 +108,9 @@ principal component are:
 
 Poverty, ChildPoverty, Employed
 
-Several features have negative values in the first principal component,
-including
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-Minority, Poverty, ChildPoverty, Service, Office, Production, Drive,
-Carpool, OtherTransp, MeanCommute, Unemployment
-
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-\### PC1 Loading Analysis
+### PC1 Loading Analysis
 
 Looking at the PC1 loadings, several key pairs of features have opposite
 signs:
@@ -252,7 +247,7 @@ and 10 have only 1 and 4 counties, respectively, indicating that the
 clustering algorithm identified a few very distinct groups among the
 counties.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ### Second Clustering (First Two Principal Components):
 
@@ -262,7 +257,7 @@ pc.county. Cluster 1 contains 1433 counties, cluster 2 has 924 counties,
 and Cluster 4 has 601 counties. The remaining clusters have fewer
 counties, but the distribution differs from the first clustering.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 What can we take out of this
 
@@ -346,76 +341,237 @@ colnames(records) = c("train.error","test.error")
 rownames(records) = c("Decision Tree","Logistic Regression","Lasso Logistic Regression","Random Forest","Neural Network", "Neural Network Optimized")
 ```
 
-**15. Decision tree: (2 pts) train a decision tree by cv.tree().** (2
-pts) Prune tree to minimize misclassification error. Be sure to use the
-folds from above for cross-validation. (2 pts) Visualize the trees
-before and after pruning. (1 pts) Save training and test errors to
-records object. (2 pts) Interpret and discuss the results of the
-decision tree analysis. (2 pts) Use this plot to tell a story about
-voting behavior.
+## Decision Tree Analysis
 
-Decision Tree purity
+In this analysis, we’ll build a decision tree classifier to predict
+county-level voting patterns in the 2020 election. Decision trees are
+especially useful for understanding complex data relationships because
+they create interpretable rules that reflect human decision-making
+processes. We’ll begin by training a full decision tree on our training
+data, then use cross-validation to find the best tree size that
+minimizes misclassification error while preventing overfitting. After
+pruning the tree to this optimal size, we’ll visualize both the original
+and pruned trees to see how the model makes predictions. Finally, we’ll
+evaluate the model’s performance on both training and test sets and
+interpret the decision rules to gain insights into American voting
+behavior and the factors influencing political preferences at the county
+level.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+### Building the Initial Tree
 
-From our function `cv.tree()`, the best size is 6.
+First, we train a decision tree using all available predictors:
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+### Cross-Validation and Pruning
 
-**Both trees have Transit first followed by White and Women. Before
-pruning, White was right below Women, but in after pruning, White is at
-the very bottom of Women. Minority is still at the same place. In after
-pruning, Professional is not in the White split, but Professional is
-still in the Women split. Women is absent in the White split. Men is
-also absent in the White split.**
+We use cross-validation to find the optimal tree size that minimizes
+misclassification error:
 
-**It seems White was a big contributing factor if you were going to vote
-for Trump, while it seems Women was a big contributing factor if you
-were going to vote for Biden.**
+Cross-validation suggests the optimal tree size is r best_size_min
+nodes.
+
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+
+### Pruned Tree
+
+We prune the tree to the optimal size and visualize the result:
+
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+
+## Decision Tree Analysis: A Story of American Voting Patterns
+
+This decision tree provides fascinating insights into county-level
+voting patterns in the 2020 election, offering a clear overview of the
+different types of American communities.
+
+### The Primary Divide: Transit Usage
+
+The tree’s **root split on Transit \> 1.05%** immediately divides
+America into two distinct worlds.
+
+- **Left branch (Transit ≤ 1.05%)**: Rural and suburban areas in America
+  with limited public transit.
+- **Right branch (Transit \> 1.05%)**: More urban areas with public
+  transit.
+
+This indicates that **urbanization level** (measured by transit usage)
+was the most predictive factor for voting behavior.
+
+### Rural/Suburban America Story (Left Branch)
+
+In low-transit areas, the tree tells a nuanced story:
+
+**1. The “White Rural” Pattern (Node 4)**
+
+- Counties with **more than 48.9% White population** → **Donald Trump
+  (1,823 counties, 91.7% accuracy)**
+- This depicts traditional rural America - mostly white, low transit
+  usage.
+- Massive Trump stronghold, the largest single group.
+
+**2. The “Diverse Rural” Pattern**
+
+- Counties with **48.9% or less White population** further divided by
+  unemployment:
+  - **High unemployment (\>7.85%)** → **Joe Biden (Node 3, 102
+    counties)**
+  - **Low unemployment (≤7.85%)** → Further subdivisions on voting-age
+    citizenship
+
+**3. The “Mixed Communities” Pattern (Nodes 1 & 2)**
+
+- In various rural areas with low unemployment, **voting-age
+  citizenship** becomes crucial.
+- **Lower citizenship rates (≤70.3%)** → **Trump (Node 1, 48 counties)**
+- **Higher citizenship rates (\>70.3%)** → **Biden (Node 2, 25
+  counties)**
+
+### Urban America Story (Right Branch)
+
+In higher-transit areas, the pattern is simpler but revealing:
+
+- **Small-medium urban areas (population ≤136K)** → **Trump (Node 5, 202
+  counties)**
+- **Large urban areas (population \>136K)** → **Biden (Node 6, 208
+  counties)**
+
+### Key Voting Behavior Insights
+
+1.  **Geographic Polarization**: The main divide is between urban and
+    rural areas, as indicated by transit usage.
+
+2.  **Racial Demographics Matter**: In rural areas, racial makeup is the
+    second most important factor.
+
+3.  **Economic hardship influences voting for Democrats**: High
+    unemployment in diverse rural areas favors Biden.
+
+4.  **Urban Size Threshold**: There is a critical population size
+    (~136K) at which urban areas switch from Republican to Democratic.
+
+5.  **Immigration Patterns**: In mixed rural communities, areas with
+    more recent immigrants (those with lower voting-age citizenship)
+    tend to support Trump, possibly reflecting concerns about economic
+    competition.
+
+### The Broader Narrative
+
+This tree captures the **“Two Americas”** phenomenon:
+
+- **Rural and small-town America**: Mainly Republican, with exceptions
+  in economically distressed and diverse regions.
+- **Urban America**: Tends to be Democratic in major cities, but smaller
+  urban areas can still lean Republican
+- **The complexity of modern politics**: Even within these broad
+  categories, factors like economic conditions, demographics, and
+  immigration patterns add important nuances.
+
+<!-- -->
 
     ##               
     ## pred.test.tree Donald Trump Joe Biden
     ##   Donald Trump          478        40
     ##   Joe Biden              24        60
 
-**16. (2 pts) Run a logistic regression to predict the winning candidate
-in each county.** (1 pts) Save training and test errors to records
-variable. (1 pts) What are the significant variables? (1 pts) Are they
-consistent with what you saw in decision tree analysis? (2 pts)
-Interpret the meaning of a couple of the significant coefficients in
-terms of a unit change in the variables.
+## Logistic Regression Analysis
 
-For interpretable machine learning
+We’ll now develop a logistic regression model to predict county-level
+voting outcomes and compare its insights with our decision tree
+analysis. Unlike decision trees that generate interpretable rules
+through splits, logistic regression estimates the outcome’s probability
+by modeling the relationship between predictors and the log-odds of
+voting for a specific candidate. This method allows us to measure the
+individual impact of each variable while accounting for all others.
+
+Our analysis will involve fitting the logistic regression model to our
+training data, evaluating its performance on both training and test
+sets, and identifying which variables significantly influence voting
+patterns. We’ll examine both statistical significance (p-values) and
+practical significance (odds ratios) to understand which factors have
+meaningful real-world impact. Finally, we’ll compare these results with
+our decision tree findings to see whether different modeling approaches
+reveal consistent patterns in American voting behavior or highlight
+different aspects of the electoral landscape.
+
+**Coefficient Interpretation:**
+
+    ## VotingAgeCitizen     Unemployment         Employed     Professional 
+    ##            22.70            30.98            32.68            34.84 
+    ##          Service 
+    ##            42.01
+
+Let’s focus on VotingAgeCitizen as a specific example. A 1 percentage
+point increase in VotingAgeCitizen is linked to a 22.70% rise in the
+odds of a county voting for Joe Biden, holding all other variables
+constant. This indicates that counties with higher proportions of
+voting-age citizens tend to favor Democratic candidates.
+
+## Significant Variables
+
+#### P-Value Approach (p \< 0.05)
 
 Using traditional $p < 0.05$ criteria, the significant variables are
 TotalPop, White, VotingAgeCitizen, Professional, Service, Office,
-Production, Drive, Carpool, Employed, PrivateWork, Unemployment. White
-is included, but Women and Minority are not among the top 5. It does
-deviate from the Decision Tree analysis. However, with our large sample
-size (n = 2,408), nearly all non-zero coefficients will appear
-statistically significant, making this criterion less meaningful for
-practical variable selection.
+Production, Drive, Carpool, Employed, PrivateWork, Unemployment.
+Something we need to consider is our large sample size (n = 2,408). With
+our large sample size (n = 2,408), nearly all non-zero coefficients will
+appear statistically significant, making this criterion less meaningful
+for practical variable selection.
+
+### Odds Ratios (\>20% change in odds)
+
+**Why Odds Ratios Over P-Values**: While p-values indicate whether an
+effect is statistically significant, they do not show the **practical
+significance** or **magnitude** of the effect. In large datasets like
+ours, even tiny, practically meaningless effects become statistically
+significant. Odds ratios display the **size** of the effect, helping us
+determine which variables have meaningful real-world impacts on voting
+behavior.
+
+**Understanding Odds Ratios:** An odds ratio indicates the
+multiplicative change in odds with a one-unit increase in the predictor.
+For example, VotingAgeCitizen = 1.2270 means that for each 1 percentage
+point rise in voting-age citizens, the odds of voting for Biden increase
+by 22.70%, assuming all other variables stay the same.
 
     ## VotingAgeCitizen     Professional          Service            Drive 
     ##           1.2270           1.3484           1.4201           0.8182 
     ##         Employed       FamilyWork     Unemployment 
     ##           1.3268           0.5958           1.3098
 
-Below are the significant variables:
+**Important Limitations**: These interpretations assume a ceteris
+paribus (all other variables held constant) approach, which rarely
+occurs in real life. Additionally, logistic regression assumes linear
+relationships between predictors and the log-odds and that observations
+are independent. The model does not account for complex interactions
+between variables that might exist in actual voting behavior.
 
-    ## Unemployment     Employed Professional      Service   FamilyWork 
-    ##       0.2699       0.2827       0.2989       0.3507       0.5178
+### Comparison with Decision Tree Analysis
 
-If we were to increase VotingAgeCitizen by one unit, holding the rest
-fixed, then applying the same logic to Unemployment, Unemployment,
-Employed, Professional, and Service, we would get a percent in the odds:
+**Similarities:** - Both methods identify **White, VotingAgeCitizen, and
+Unemployment** as key predictors. - Both highlight the significance of
+**demographic composition** and **economic conditions** in voting
+behavior. - Both demonstrate that **higher unemployment** generally
+benefits Democratic candidates.
 
-    ## VotingAgeCitizen     Unemployment         Employed     Professional 
-    ##            22.70            30.98            32.68            34.84 
-    ##          Service 
-    ##            42.01
+**Key Differences:** - **Geographic vs. Occupational Focus**: The
+decision tree emphasizes **Transit** (urbanization) as the main split,
+while logistic regression highlights **occupational categories**
+(Professional, Service) as the key predictors. - **Variable Selection**:
+Decision tree uses **TotalPop** for urban classification, but logistic
+regression shows **Service** and **Professional** occupations as more
+influential. - **Interpretability**: The decision tree provides clear
+geographic narratives (urban vs. rural), while logistic regression
+uncovers more detailed occupational and demographic effects.
+
+**General Analysis:** Both methods agree on the crucial role of
+demographic and economic factors in voting behavior, but they highlight
+different aspects. The decision tree’s geographic focus matches the “Two
+Americas” narrative, while logistic regression’s focus on occupational
+factors suggests that **job type** and **economic role** might be even
+more predictive than simple urban-rural geography. This complementary
+view broadens our understanding of American election patterns.
 
 **17. You may notice that you get a warning glm.fit: fitted
 probabilities numerically 0 or 1 occurred.** As we discussed in class,
@@ -507,9 +663,9 @@ the tree method, logistic regression, and the lasso logistic regression?
 
 ![](02_machine_learning_analysis_files/figure-gfm/nn-opt-plot-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 **Answer:**
 
