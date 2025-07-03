@@ -115,20 +115,70 @@ Minority, Poverty, ChildPoverty, Service, Office, Production, Drive,
 Carpool, OtherTransp, MeanCommute, Unemployment
 
 ![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+\### PC1 Loading Analysis
 
-Notably, Poverty and ChildPoverty have negative loadings and large
-magnitudes. Features with opposite signs in the principal component
-typically indicate a negative correlation between them. This means that
-as one feature increases, the other tends to decrease. In this case, the
-negative correlation suggests that counties with higher values in these
-socioeconomic indicators tend to have lower values in other related
-features.
+Looking at the PC1 loadings, several key pairs of features have opposite
+signs:
 
-For instance, counties with high poverty rates might be associated with
-lower income levels, fewer job opportunities, and different commuting
-patterns. The opposite signs in the first principal component capture
-this underlying relationship in the data, showing how different
-socioeconomic and demographic variables are interconnected.
+**Key opposite sign pairs:**
+
+- **Poverty/Child Poverty (negative) vs. Income (positive)**: These
+  opposite signs indicate that counties with higher poverty rates tend
+  to have lower incomes, showing a strong negative correlation between
+  economic hardship and affluence.
+
+- **Unemployment (negative) vs. Employed (positive)**: The opposite
+  loadings indicate that counties with high unemployment rates tend to
+  have low employment rates, which is expected given that these are
+  complementary measures.
+
+- **Minority (negative) vs White (positive)**: This indicates that
+  counties with higher minority populations tend to have lower white
+  populations, reflecting demographic composition patterns.
+
+- **Service (negative) vs Professional/Office (positive)**: Counties
+  with more service sector employment tend to have fewer professional
+  and office workers, suggesting different economic structures.
+
+These opposite signs in PC1 indicate that the first principal component
+captures a socioeconomic divide, where affluent counties (characterized
+by high income, employment, professional work, and a white population)
+contrast with economically disadvantaged counties (characterized by high
+poverty, unemployment, service work, and minority populations). The
+negative correlations between these feature pairs indicate they tend to
+move in opposite directions across counties.
+
+### PC2 Loading Analysis
+
+Looking at the PC2 loadings, several key pairs of features have opposite
+signs:
+
+**Key opposite sign pairs:**
+
+- **Income (negative) vs. White (positive)**: This suggests that in
+  PC2’s dimension, areas with higher incomes tend to have lower white
+  populations, indicating PC2 may capture urban diversity patterns where
+  diverse, higher-income areas contrast with predominantly white areas.
+
+- **Transit/OtherTransp (negative) vs. Drive (positive)**: Counties with
+  more public transit and alternative transportation have fewer people
+  driving to work, reflecting urban versus suburban/rural transportation
+  patterns.
+
+- **MeanCommute (negative) vs. WorkAtHome (positive)**: Areas with
+  longer average commutes tend to have fewer people working from home,
+  suggesting PC2 captures commuting versus remote work patterns.
+
+- **Service (negative) vs. Professional/Office (positive)**: This
+  indicates different employment structures, where service-oriented
+  economies contrast with professional or office-based economies.
+
+PC2 captures an urban-suburban/rural divide where dense,
+transit-oriented areas with diverse populations and longer commutes
+contrast with regions characterized by car dependency, remote work, and
+professional employment. The opposite signs reveal that PC2 identifies
+counties along a spectrum of urbanization and work/transportation
+patterns.
 
 ## Determine the number of minimum number of PCs needed to capture 90% of the variance for the analysis
 
@@ -156,7 +206,27 @@ explained variance accumulates as more principal components are
 included, allowing us to see the incremental contribution of each
 additional component to the total variance explained.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/pve-plot-1.png)<!-- -->
+
+### PCA Justification and Interpretation
+
+**1. Is focusing on PC1 and PC2 justified?**
+
+- PC1 and PC2 together account for roughly 38-40% of the total variance,
+  which is low compared to the usual 70-80% threshold for good
+  representation. However, the sharp elbow after PC2 in the individual
+  PVE plot and the significant drop from about 14% to 7% suggest these
+  two components capture the most meaningful patterns in the data.
+
+**2. What overall patterns do PC1 and PC2 capture?**
+
+- PC1 (~25% variance) reflects a socioeconomic divide where affluent
+  counties (high income, employment, professional work, white
+  population) contrast with disadvantaged counties (high poverty,
+  unemployment, minority populations). PC2 (~13-14% variance) indicates
+  an urban-suburban/rural divide characterized by transportation
+  patterns (transit vs. driving), work arrangements (commuting
+  vs. remote), and population density differences.
 
 # Clustering
 
@@ -181,7 +251,8 @@ several other clusters have very few counties. For instance, clusters 6
 and 10 have only 1 and 4 counties, respectively, indicating that the
 clustering algorithm identified a few very distinct groups among the
 counties.
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ### Second Clustering (First Two Principal Components):
 
@@ -190,7 +261,8 @@ hierarchical clustering using the first two principal components from
 pc.county. Cluster 1 contains 1433 counties, cluster 2 has 924 counties,
 and Cluster 4 has 601 counties. The remaining clusters have fewer
 counties, but the distribution differs from the first clustering.
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 What can we take out of this
 
@@ -253,11 +325,26 @@ election.tr <- election.cl[idx.tr, ]
 election.te <- election.cl[-idx.tr, ]
 ```
 
-Use the following code to define 10 cross-validation folds:
+Using the following code to define 10 cross-validation folds:
+
+``` r
+set.seed(10)
+nfold <- 10
+folds <- sample(cut(1:nrow(election.tr), breaks=nfold, labels=FALSE))
+```
 
 Using the following error rate function. And the object records is used
 to record the classification performance of each method in the
 subsequent problems.
+
+``` r
+calc_error_rate = function(predicted.value, true.value){
+  return(mean(true.value!=predicted.value))
+}
+records = matrix(NA, nrow=6, ncol=2)
+colnames(records) = c("train.error","test.error")
+rownames(records) = c("Decision Tree","Logistic Regression","Lasso Logistic Regression","Random Forest","Neural Network", "Neural Network Optimized")
+```
 
 **15. Decision tree: (2 pts) train a decision tree by cv.tree().** (2
 pts) Prune tree to minimize misclassification error. Be sure to use the
@@ -269,13 +356,13 @@ voting behavior.
 
 Decision Tree purity
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 From our function `cv.tree()`, the best size is 6.
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 **Both trees have Transit first followed by White and Women. Before
 pruning, White was right below Women, but in after pruning, White is at
@@ -383,7 +470,7 @@ classification results, discuss the pros and cons of the various
 methods. (2 pts) Are the different classifiers more appropriate for
 answering different kinds of questions about the election?
 
-![](02_machine_learning_analysis_files/figure-gfm/before-random-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/roc-curve-plot-1.png)<!-- -->
 
 **Answer:**
 
@@ -401,8 +488,6 @@ the tree method, logistic regression, and the lasso logistic regression?
 
 ### Random Forest
 
-### Neural Net
-
     ## Loading required package: foreach
 
     ## 
@@ -414,17 +499,17 @@ the tree method, logistic regression, and the lasso logistic regression?
 
     ## Loading required package: iterators
 
-    ## Aggregating results
-    ## Selecting tuning parameters
-    ## Fitting size = 13, decay = 0.5 on full training set
+    ## Loading required package: parallel
 
-    ## Warning: Setting row names on a tibble is deprecated.
+### Neural Net
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-58-1.png)<!-- -->
+### Neural Net Optimized
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-60-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/nn-opt-plot-1.png)<!-- -->
 
-![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-61-1.png)<!-- -->
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+
+![](02_machine_learning_analysis_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 **Answer:**
 

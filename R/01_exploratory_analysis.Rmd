@@ -373,14 +373,18 @@ ggplot(data = counties) +
 new_state <- states
 # new_state$region <- str_to_title(new_state$region)
 
-new_state <- new_state %>%
-  left_join(state.winner, # # state.winner %>% mutate(state = tolower(state))
-            by = c("region" = "state"))
+new_state <- state.winner %>%
+  left_join(new_state, # # state.winner %>% mutate(state = tolower(state))
+            by = c("state" = "region"))
+
+#new_state <- new_state %>%
+#  left_join(state.winner, # # state.winner %>% mutate(state = tolower(state))
+#            by = c("region" = "state"))
 # new_state %>% filter(is.na(region))
 
-new_state <- new_state %>%
-  left_join(electoral_votes_2020,
-            by = c("region" = "state"))
+#new_state <- new_state %>%
+#  left_join(electoral_votes_2020,
+#            by = c("region" = "state"))
 ```
 
 
@@ -404,13 +408,17 @@ ggplot(data = new_state) +
 counties <- map_data("county")
 new_counties <- counties
 
-new_counties <- new_counties %>%
-  left_join(county.winner,
-            by = c("region" = "state", "subregion" = "county"))
+#new_counties <- new_counties %>%
+#  left_join(county.winner,
+#            by = c("region" = "state", "subregion" = "county"))
 
-new_winner <- county.winner %>%
-  left_join(counties,
+new_counties <- county.winner %>%
+  left_join(new_counties,
             by = c("state" = "region", "county" = "subregion"))
+
+#new_winner <- county.winner %>%
+#  left_join(counties,
+#            by = c("state" = "region", "county" = "subregion"))
 
 ```
 

@@ -183,11 +183,6 @@ largest_features <- names(largest_abs_loadings)
 ```
 `r names(largest_abs_loadings)`
 
-Several features have negative values in the first principal component, including
-```{r echo=FALSE}
-negative_loadings <- new_p[new_p < 0]
-```
-`r names(negative_loadings)`
 
 
 ```{r message=FALSE, warnings=FALSE, results='hide', echo=FALSE, fig.height = 8, fig.width = 12}
@@ -224,9 +219,37 @@ fig7 <- base + facet_wrap(~Principal_Component, ncol = 2)
 fig7
 ```
 
-Notably, Poverty and ChildPoverty have negative loadings and large magnitudes. Features with opposite signs in the principal component typically indicate a negative correlation between them. This means that as one feature increases, the other tends to decrease. In this case, the negative correlation suggests that counties with higher values in these socioeconomic indicators tend to have lower values in other related features.
+### PC1 Loading Analysis
 
-For instance, counties with high poverty rates might be associated with lower income levels, fewer job opportunities, and different commuting patterns. The opposite signs in the first principal component capture this underlying relationship in the data, showing how different socioeconomic and demographic variables are interconnected.
+Looking at the PC1 loadings, several key pairs of features have opposite signs:
+
+**Key opposite sign pairs:**
+
+- **Poverty/Child Poverty (negative) vs. Income (positive)**: These opposite signs indicate that counties with higher poverty rates tend to have lower incomes, showing a strong negative correlation between economic hardship and affluence.
+
+- **Unemployment (negative) vs. Employed (positive)**: The opposite loadings indicate that counties with high unemployment rates tend to have low employment rates, which is expected given that these are complementary measures.
+
+- **Minority (negative) vs White (positive)**: This indicates that counties with higher minority populations tend to have lower white populations, reflecting demographic composition patterns.
+
+- **Service (negative) vs Professional/Office (positive)**: Counties with more service sector employment tend to have fewer professional and office workers, suggesting different economic structures.
+
+These opposite signs in PC1 indicate that the first principal component captures a socioeconomic divide, where affluent counties (characterized by high income, employment, professional work, and a white population) contrast with economically disadvantaged counties (characterized by high poverty, unemployment, service work, and minority populations). The negative correlations between these feature pairs indicate they tend to move in opposite directions across counties.
+
+### PC2 Loading Analysis
+
+Looking at the PC2 loadings, several key pairs of features have opposite signs:
+
+**Key opposite sign pairs:**
+
+- **Income (negative) vs. White (positive)**: This suggests that in PC2's dimension, areas with higher incomes tend to have lower white populations, indicating PC2 may capture urban diversity patterns where diverse, higher-income areas contrast with predominantly white areas.
+
+- **Transit/OtherTransp (negative) vs. Drive (positive)**: Counties with more public transit and alternative transportation have fewer people driving to work, reflecting urban versus suburban/rural transportation patterns.
+
+- **MeanCommute (negative) vs. WorkAtHome (positive)**: Areas with longer average commutes tend to have fewer people working from home, suggesting PC2 captures commuting versus remote work patterns.
+
+- **Service (negative) vs. Professional/Office (positive)**: This indicates different employment structures, where service-oriented economies contrast with professional or office-based economies.
+
+PC2 captures an urban-suburban/rural divide where dense, transit-oriented areas with diverse populations and longer commutes contrast with regions characterized by car dependency, remote work, and professional employment. The opposite signs reveal that PC2 identifies counties along a spectrum of urbanization and work/transportation patterns.
 
 
 ```{r echo=FALSE}
@@ -273,7 +296,7 @@ Computing `min(which(cumsum(pve) >= .9))`, we need about `r min(which(cumsum(pve
 
 The cumulative proportion of variance plot visually demonstrates how the explained variance accumulates as more principal components are included, allowing us to see the incremental contribution of each additional component to the total variance explained.
 
-```{r echo=FALSE}
+```{r pve-plot, echo=FALSE, fig.width = 12}
 # Creating PVE dataframe
 pca_df <- data.frame(
   component = 1:length(pve),
@@ -323,6 +346,16 @@ p1 + p2 +
     )
 ```
 
+### PCA Justification and Interpretation
+
+**1. Is focusing on PC1 and PC2 justified?**
+
+- PC1 and PC2 together account for roughly 38-40% of the total variance, which is low compared to the usual 70-80% threshold for good representation. However, the sharp elbow after PC2 in the individual PVE plot and the significant drop from about 14% to 7% suggest these two components capture the most meaningful patterns in the data.
+
+**2. What overall patterns do PC1 and PC2 capture?**
+
+- PC1 (~25% variance) reflects a socioeconomic divide where affluent counties (high income, employment, professional work, white population) contrast with disadvantaged counties (high poverty, unemployment, minority populations). PC2 (~13-14% variance) indicates an urban-suburban/rural divide characterized by transportation patterns (transit vs. driving), work arrangements (commuting vs. remote), and population density differences.
+
 
 # Clustering
 
@@ -351,6 +384,7 @@ set.seed(10)
 census.clean.hclust <- hclust(census.clean.dist)
 ```
 
+### First Clustering (Original Features):
 
 ```{r echo=FALSE}
 set.seed(10)
@@ -359,8 +393,8 @@ clus <- cutree(census.clean.hclust, 10)
 table_data <- as.data.frame(table(clus))
 ```
 
-### First Clustering (Original Features):
 When performing hierarchical clustering using the scaled original features with complete linkage and cutting the tree into 10 clusters, the distribution of observations across clusters is quite uneven. Cluster 1 contains the most observations, with `r table(clus)["1"]` counties, while several other clusters have very few counties. For instance, clusters 6 and 10 have only `r table(clus)["6"]` and `r table(clus)["10"]` counties, respectively, indicating that the clustering algorithm identified a few very distinct groups among the counties.
+
 ```{r echo=FALSE}
 # table(clus)
 ggplot(table_data, aes(x = factor(clus), y = Freq)) +
@@ -374,6 +408,9 @@ ggplot(table_data, aes(x = factor(clus), y = Freq)) +
 ```
 
 
+
+### Second Clustering (First Two Principal Components):
+
 ```{r echo=FALSE}
 census_transform <- as.data.frame(pc.county)
 
@@ -385,9 +422,8 @@ clus_new <- cutree(census_transform.hclust, 10)
 table_data <- as.data.frame(table(clus_new))
 ```
 
-
-### Second Clustering (First Two Principal Components):
 The cluster distribution changes significantly after re-running the hierarchical clustering using the first two principal components from pc.county. Cluster 1 contains `r table(clus_new)["1"]` counties, cluster 2 has `r table(clus_new)["2"]` counties, and Cluster 4 has `r table(clus_new)["4"]` counties. The remaining clusters have fewer counties, but the distribution differs from the first clustering.
+
 ```{r echo=FALSE}
 ggplot(table_data, aes(x = factor(clus_new), y = Freq)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
@@ -403,40 +439,6 @@ What can we take out of this
 
 * Both clustering approaches result in highly imbalanced cluster sizes, suggesting some very distinct groups of counties.
 * The uneven cluster sizes in both methods suggest that a few very distinct county groups stand out from the majority, which could represent counties with unique demographic or economic characteristics.
-
-
-
-```{r echo=FALSE}
-### The Elbow Method 
-# Calculate scaled data for clustering
-scaled_data <- scale(census.clean[,c(-1:-3)], center=TRUE, scale=TRUE)
-
-# Calculate distances and perform hierarchical clustering
-distance_matrix <- dist(pc.county)
-hclust_result <- hclust(distance_matrix)
-
-# Elbow Method for Optimal Number of Clusters
-wss <- sapply(2:15, function(k){
-  clusters <- cutree(hclust_result, k)
-  wss <- sum(kmeans(scaled_data, centers = k)$withinss)
-  return(wss)
-  }
-)
-
-# Prepare data for ggplot
-elbow_data <- data.frame(k = 2:15, wss = wss)
-
-# Plotting WSS vs. Number of Clusters
-elbow_method <- ggplot(elbow_data, aes(x = k, y = wss)) +
-  geom_point() +
-  geom_line() +
-  labs(title = "Elbow Method",
-       x = "Number of Clusters (k)",
-       y = "WCSS") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
 
 
 # Classification
@@ -483,9 +485,9 @@ election.tr <- election.cl[idx.tr, ]
 election.te <- election.cl[-idx.tr, ]
 ```
 
-Use the following code to define 10 cross-validation folds:
+Using the following code to define 10 cross-validation folds:
 
-```{r echo=FALSE}
+```{r}
 set.seed(10)
 nfold <- 10
 folds <- sample(cut(1:nrow(election.tr), breaks=nfold, labels=FALSE))
@@ -493,7 +495,7 @@ folds <- sample(cut(1:nrow(election.tr), breaks=nfold, labels=FALSE))
 
 Using the following error rate function. And the object records is used to record the classification performance of each method in the subsequent problems.
 
-```{r echo=FALSE}
+```{r}
 calc_error_rate = function(predicted.value, true.value){
   return(mean(true.value!=predicted.value))
 }
@@ -601,13 +603,13 @@ records[1,] <- c(a,b)
 
 
 For interpretable machine learning
-```{r echo=FALSE}
+```{r logistic-reg-fitting, echo=FALSE}
 # Fitting model using logistic regression
 glm.obj.election <- glm(candidate~.,data = election.tr, family = binomial)
 ```
 
 
-```{r echo=FALSE}
+```{r log-reg-sum-pval, echo=FALSE}
 # Traditional statistical significance approach
 model_summary <- summary(glm.obj.election)
 coef_table <- model_summary$coefficients
@@ -627,34 +629,8 @@ Using traditional $p < 0.05$ criteria, the significant variables are `r signific
 odds_ratios <- exp(glm.obj.election$coefficients[-1]) # Remove intercept
 
 # Focus on meaningful magnitudes - set your own thresholds
-meaningful_effects <- odds_ratios[abs(log(odds_ratios)) > log(1.2)]  # >20% change in odds
+meaningful_effects <- odds_ratios[abs(log(odds_ratios)) > log(1.2)]  # > 20% change in odds
 print(meaningful_effects)
-```
-
-
-```{r echo=FALSE}
-set.seed(10)
-prob.training <- predict(glm.obj.election, election.tr, type="response")
-prob.test <- predict(glm.obj.election, election.te, type="response")
-
-# Convert probabilities to binary predictions
-majority_rule <- 0.5
-pred_training <- ifelse(prob.training > majority_rule, "Joe Biden", "Donald Trump")
-pred_test <- ifelse(prob.test > majority_rule, "Joe Biden", "Donald Trump")
-```
-
-```{r echo=FALSE}
-training_pred_table <- table(Predicted = pred_training, True = election.tr$candidate)
-test_pred_table <- table(Predicted = pred_test, True = election.te$candidate)
-
-train_accuracy <- sum(diag(training_pred_table)) / nrow(election.tr)
-test_accuracy <- sum(diag(test_pred_table)) / nrow(election.te)
-```
-
-```{r echo=FALSE}
-c <- calc_error_rate(pred_training, election.tr$candidate)
-d <- calc_error_rate(pred_test, election.te$candidate)
-records[2,] <- c(c,d)
 ```
 
 
@@ -668,29 +644,61 @@ If we were to increase VotingAgeCitizen by one unit, holding the rest fixed, the
 (exp(tail(sort(glm.obj.election$coefficients[2:24]), 5)) - 1)*100
 ```
 
+```{r echo=FALSE}
+set.seed(10)
+prob.training <- predict(glm.obj.election, election.tr, type="response")
+prob.test <- predict(glm.obj.election, election.te, type="response")
+
+# Convert probabilities to binary predictions
+majority_rule <- 0.5
+pred_training <- ifelse(prob.training > majority_rule, "Joe Biden", "Donald Trump")
+pred_test <- ifelse(prob.test > majority_rule, "Joe Biden", "Donald Trump")
+```
+
+```{r echo=FALSE}
+# Training set confusion matrix and error calculation
+training_pred_table <- table(Predicted = pred_training, True = election.tr$candidate)
+train_accuracy <- sum(diag(training_pred_table)) / nrow(election.tr)
+
+# Test set confusion matrix and error calculation
+test_pred_table <- table(Predicted = pred_test, True = election.te$candidate)
+test_accuracy <- sum(diag(test_pred_table)) / nrow(election.te)
+
+
+c <- calc_error_rate(pred_training, election.tr$candidate)
+d <- calc_error_rate(pred_test, election.te$candidate)
+records[2,] <- c(c,d)
+```
+
+
 **17. You may notice that you get a warning glm.fit: fitted probabilities numerically 0 or 1 occurred.** As we discussed in class, this is an indication that we have perfect separation (some linear combination of variables perfectly predicts the winner). This is usually a sign that we are overfitting. One way to control overfitting in logistic regression is through regularization.
 
 (3 pts) Use the cv.glmnet function from the glmnet library to run a 10-fold cross validation and select the best regularization parameter for the logistic regression with LASSO penalty. Set lambda = seq(1, 50) * 1e-4 in cv.glmnet() function to set pre-defined candidate values for the tuning parameter λ.
 
-```{r echo=FALSE}
+```{r LASSO-train-test-split, echo=FALSE}
+# Train-Test split
 set.seed(10)
-dat <- model.matrix(candidate~., election.cl) 
+n <- nrow(election.cl)
+dat <- model.matrix(candidate~., election.cl)[, -1]  # Remove intercept
 idx.tr <- sample.int(n, 0.8*n)
-x.train = dat[idx.tr, ] 
-y.train = election.cl$candidate[idx.tr]
 
-# The rest as test data 
-x.test = dat[-idx.tr, ] 
+x.train <- dat[idx.tr, ] 
+y.train <- election.cl$candidate[idx.tr]
+
+x.test <- dat[-idx.tr, ] 
 y.test <- election.cl$candidate[-idx.tr]
 ```
 
 
-
-```{r echo=FALSE}
+```{r LASSO-cv-regularization, echo=FALSE}
 set.seed(10)
+
+# Tuning a LASSO logistic regression model by finding the optimal regularization
 cv.out.lasso <- cv.glmnet(x.train, y.train, 
-                          nfolds = 10, alpha = 1, lambda = (1e-4) * seq(1, 50),
+                          nfolds = 10, alpha = 1, 
+                          lambda = (1e-4) * seq(1, 50),
                           family = "binomial")
+
 bestlam <- cv.out.lasso$lambda.min
 ```
 
@@ -699,18 +707,18 @@ bestlam <- cv.out.lasso$lambda.min
 The optimal value of $\lambda$ in cross validation is `r bestlam`.
 
 Below are the non-zero coefficients in the LASSO regression for the optimal value of λ:
-```{r echo=FALSE}
+```{r LASSO-fitting, echo=FALSE}
 lasso.model <- glmnet(x.train, y.train, alpha=1, family = "binomial")
 pred <- predict(lasso.model,type="coefficients",s=bestlam)[1:24,]
 ```
 
-```{r echo=FALSE}
+```{r extract-LASSO-features, echo=FALSE}
 dense_coefficients <- as.matrix(coef(lasso.model, s = bestlam))
 non_zero_coefficients <- dense_coefficients[dense_coefficients != 0, ]
 print(non_zero_coefficients)
 ```
 
-```{r echo=FALSE}
+```{r LASSO-predict, echo=FALSE}
 set.seed(10)
 
 # Predict probabilities for training and test datasets
@@ -724,7 +732,7 @@ pred_test <- ifelse(prob.test > majority_rule, "Joe Biden", "Donald Trump")
 ```
 
 
-```{r echo=FALSE}
+```{r LASSO-evaluation, echo=FALSE}
 # Training set confusion matrix and error calculation
 training_pred_table <- table(Predicted = pred_training, True = election.tr$candidate)
 percent_train <- sum(diag(training_pred_table)) / nrow(election.tr) * 100
@@ -732,12 +740,10 @@ percent_train <- sum(diag(training_pred_table)) / nrow(election.tr) * 100
 # Test set confusion matrix and error calculation
 test_pred_table <- table(Predicted = pred_test, True = election.te$candidate)
 percent_test <- sum(diag(test_pred_table)) / nrow(election.te) * 100
-```
 
-
-```{r echo=FALSE}
-e <- calc_error_rate(as.factor(pred_training), election.tr$candidate)
-f <- calc_error_rate(as.factor(pred_test), election.te$candidate)
+# Error Rate Calculations
+e <- calc_error_rate(as.factor(pred_training), y.train)
+f <- calc_error_rate(as.factor(pred_test), y.test)
 records[3,] <- c(e,f)
 ```
 
@@ -750,55 +756,73 @@ It does seem Income is not an important metric. White has been consistently show
 
 **18. (6 pts) Compute ROC curves for the decision tree, logistic regression and LASSO logistic regression using predictions on the test data.** Display them on the same plot. (2 pts) Based on your classification results, discuss the pros and cons of the various methods. (2 pts) Are the different classifiers more appropriate for answering different kinds of questions about the election?
 
-```{r echo=FALSE}
+```{r model-prediction-set, echo=FALSE}
+## Get predicted probabilities from each model for ROC analysis
+
 # Decision Tree - get the probabilities for "Joe Biden"
 pred_tree <- predict(pt.cv, election.te, type="vector")[, 2]
 
-# Logistic Regression
-pred_log <- predict(glm.obj.election, election.te, type="response")
+# Logistic Regression - get predicted probabilities
+pred_log <- predict(glm.obj.election, election.te, type="response") # returns predicted probabilities (between 0 and 1)
 
-# LASS Logistic Regression
+# LASSO Logistic Regression - get predicted probabilities using optimal lambda
 pred_lasso <- predict(lasso.model, type="response", s=bestlam, newx = x.test)
-```
+``` 
 
 
-```{r echo=FALSE}
+```{r roc-analysis-setup, echo=FALSE}
+## Create prediction objects for ROC analysis (combines predictions with true labels)
+
+# Decision Tree
 roc_pred_tree <-
    prediction(
      predictions = pred_tree,
      labels = election.te$candidate
 )
 
+# Logistic Regression
 roc_pred_log <-
    prediction(
      predictions = pred_log,
      labels = election.te$candidate
 )
 
+# LASSO
 roc_pred_lasso <-
    prediction(
      predictions = pred_lasso,
      labels = y.test
 )
-```
 
+## Calculate ROC curve coordinates (TPR vs FPR) for each model
 
-```{r echo=FALSE}
+# Decision Tree
 roc_perf_tree <- performance(roc_pred_tree, measure = "tpr", x.measure = "fpr")
+
+# Logistic Regression
 roc_perf_log <- performance(roc_pred_log, measure = "tpr", x.measure = "fpr")
+
+# LASSO
 roc_perf_lasso <- performance(roc_pred_lasso, measure = "tpr", x.measure = "fpr")
 ```
 
-```{r before-random, echo=FALSE}
+
+```{r roc-data-preparation, echo=FALSE}
+# Combine ROC curve data from all three models into a single data frame for plotting
 roc_data <- data.frame(
+  # Extract False Positive Rates from all models
   FPR = c(
-    unlist(roc_perf_tree@x.values), 
-    unlist(roc_perf_log@x.values), 
-    unlist(roc_perf_lasso@x.values)),
+    unlist(roc_perf_tree@x.values), # Decision Tree
+    unlist(roc_perf_log@x.values), # Logistic Regression
+    unlist(roc_perf_lasso@x.values)), # LASSO
+  
+  # Extract True Positive Rates from all models
   TPR = c(
-    unlist(roc_perf_tree@y.values), 
-    unlist(roc_perf_log@y.values), 
-    unlist(roc_perf_lasso@y.values)),
+    unlist(roc_perf_tree@y.values), # Decision Tree
+    unlist(roc_perf_log@y.values), # Logistic Regression
+    unlist(roc_perf_lasso@y.values)), # LASSO
+  
+  # Create model labels with correct lengths for each model's data points
   Model = factor(rep(c("Tree", "Log", "Lasso"), times = c(length(roc_perf_tree@x.values[[1]]),
                                                           length(roc_perf_log@x.values[[1]]),
                                                           length(roc_perf_lasso@x.values[[1]])
@@ -806,20 +830,22 @@ roc_data <- data.frame(
                      )
                  )
 )
+```
 
+```{r roc-curve-plot, echo=FALSE}
+# Create ROC curve comparison plot
 ggplot(roc_data, aes(x = FPR, y = TPR, color = Model, linetype = Model)) +
-  geom_line(linewidth = 1) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
-  scale_color_manual(values = c("green", "blue", "red")) +
+  geom_line(linewidth = 1) +  # Plot ROC curves for each model
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +  # Add diagonal reference line (random classifier)
+  scale_color_manual(values = c("green", "blue", "red")) +  # Set custom colors for each model
   labs(title = "ROC Curve Comparison",
        x = "False Positive Rate", # (FPR)
        y = "True Positive Rate", # (TPR)
        color = "Model",
        linetype = "Model") +
-  #theme_minimal() +
-  theme_classic() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(legend.position = "bottom") # Positions legend at the bottom
+  theme_classic() +  # Use clean classic theme
+  theme(plot.title = element_text(hjust = 0.5)) +  # Center the title
+  theme(legend.position = "bottom")  # Move legend to bottom
 ```
 
 
@@ -833,31 +859,79 @@ This part will be worth up to a 20% of your final project grade!
 
 **19. (9 pts) Explore additional classification methods.** Consider applying additional two classification methods from KNN, LDA, QDA, SVM, random forest, boosting, neural networks etc. (You may research and use methods beyond those covered in this course). How do these compare to the tree method, logistic regression, and the lasso logistic regression?
 
-### Random Forest
-
-```{r echo=FALSE, results='hide'}
-election.randfor <- randomForest(candidate~., 
-                                 data = election.tr, importance=TRUE)
-```
 
 ```{r echo=FALSE}
-pred_training <- predict(election.randfor, newdata = election.tr, type = "response")
-pred_test <- predict(election.randfor, newdata = election.te, type = "response")
+set.seed(10)
+n <- nrow(election.cl)
+idx.tr <- sample.int(n, 0.8*n)
+election.tr <- election.cl[idx.tr, ]
+election.te <- election.cl[-idx.tr, ]
+```
 
+### Random Forest
+
+```{r echo=FALSE}
+# Load required libraries
+library(doParallel)
+library(parallelly)
+```
+
+
+```{r random-forest-fitting, echo=FALSE, results='hide', error=FALSE, message=FALSE}
+# Clean up first
+try(stopCluster(cl), silent = TRUE)
+registerDoSEQ()
+
+# Setup parallel processing
+num_cores <- availableCores(omit = 1)
+cl <- makeCluster(num_cores)
+registerDoParallel(cl)
+
+ctrl <- trainControl(
+  method = "cv", 
+  number = 10,
+  allowParallel = TRUE,  # ENABLE parallel processing
+  verboseIter = TRUE     # Show progress
+)
+
+rf_grid <- expand.grid(mtry = c(2, 4, 6, 8, 10))
+
+set.seed(10)
+rf_model <- train(candidate~., 
+                  data = election.tr,
+                  method = "rf",
+                  trControl = ctrl,
+                  tuneGrid = rf_grid,
+                  importance = TRUE,
+                  ntree = 500)
+
+stopCluster(cl)
+registerDoSEQ()
+```
+
+```{r random-forest-predict, echo=FALSE}
+# Make predictions on training and test set
+pred_training <- predict(rf_model, newdata = election.tr)
+pred_test <- predict(rf_model, newdata = election.te)
+
+# Storing Error Rates
 a <- calc_error_rate(as.factor(pred_training), election.tr$candidate)
 b <- calc_error_rate(as.factor(pred_test), election.te$candidate)
 records[4,] <- c(a,b)
 ```
 
-```{r echo=FALSE}
-pred_randfor <- predict(election.randfor, newdata = election.te, type = "prob")[, 2]
+```{r random-forest-roc-analysis-setup, echo=FALSE}
+# Create prediction objects for ROC analysis (combines predictions with true labels)
+pred_randfor <- predict(rf_model, newdata = election.te, type = "prob")[, 2]
 
+# Create prediction object for ROC analysis (combines predictions with true labels)
 roc_pred_randfor <-
    prediction(
      predictions = pred_randfor,
      labels = election.te$candidate
 )
 
+# Calculate ROC curve coordinates (TPR vs FPR)
 roc_perf_randfor <- performance(roc_pred_randfor, measure = "tpr", x.measure = "fpr")
 ```
 
@@ -872,14 +946,18 @@ election.tr <- election.cl[idx.tr, ]
 election.te <- election.cl[-idx.tr, ]
 ```
 
-
 ```{r echo=FALSE}
 # Load required libraries
 library(nnet)
 library(caret)  # For data preprocessing
 library(parallel)
 library(doParallel)
-library(parallelly)
+```
+
+```{r neural-net-fitting, echo=FALSE, results='hide', error=FALSE, message=FALSE}
+# Clean up any parallel processing connections first
+try(stopCluster(cl), silent = TRUE)
+registerDoSEQ()
 
 # Scale our predictors for neural network
 # Create preprocessing object using training data
@@ -911,33 +989,42 @@ nn_model <- nnet(
   maxit = 1000,    # maximum iterations
   trace = FALSE    # suppress training output
 )
+```
 
 
-# Make predictions
+```{r neural-net-predict, echo=FALSE}
+# Make predictions on training and test set
 train_pred_prob <- predict(nn_model, train_data_scaled, type = "raw")
 test_pred_prob <- predict(nn_model, test_data_scaled, type = "raw")
 
 # Convert probabilities to class predictions
 train_pred <- ifelse(train_pred_prob > 0.5, "Joe Biden", "Donald Trump")
 test_pred <- ifelse(test_pred_prob > 0.5, "Joe Biden", "Donald Trump")
-```
 
-```{r echo=FALSE}
 # Storing Error Rates
 a <- calc_error_rate(as.factor(train_pred), election.tr$candidate)
 b <- calc_error_rate(as.factor(test_pred), election.te$candidate)
 records[5,] <- c(a,b)
+```
 
+```{r neural-net-roc-analysis-setup, echo=FALSE}
+# Create prediction objects for ROC analysis (combines predictions with true labels)
 roc_pred_nn <- prediction(
     predictions = test_pred_prob,
     labels = election.te$candidate #as.factor(election.te$candidate, levels = c("Donald Trump", "Joe Biden"))
 )
 
+# Calculate ROC curve coordinates (TPR vs FPR)
 roc_perf_nn <- performance(roc_pred_nn, measure = "tpr", x.measure = "fpr")
 ```
 
+### Neural Net Optimized
 
-```{r nn-opt, echo=FALSE}
+```{r nn-opt-fitting, echo=FALSE, results='hide', error=FALSE, warning=FALSE, message=FALSE}
+# Clean up any parallel processing connections first
+try(stopCluster(cl), silent = TRUE)
+registerDoSEQ()
+
 # Modify factor levels to be valid R names
 election.tr$candidate <- factor(election.tr$candidate,
                               levels = c("Donald Trump", "Joe Biden"),
@@ -951,6 +1038,9 @@ num_cores <- availableCores(omit = 1)  # Leave one core free
 cl <- makeCluster(num_cores)
 registerDoParallel(cl)
 
+# Set seed
+set.seed(10)
+
 # Create training control object
 ctrl <- trainControl(
   method = "cv",
@@ -958,7 +1048,8 @@ ctrl <- trainControl(
   classProbs = TRUE,
   summaryFunction = twoClassSummary,
   verboseIter = TRUE,
-  allowParallel = TRUE
+  allowParallel = TRUE,
+  seeds= set.seed(10)
 )
 
 # Define grid of hyperparameters
@@ -967,8 +1058,6 @@ grid <- expand.grid(
   decay = c(0.001, 0.01, 0.1, 0.3, 0.5)
 )
 
-# Set seed
-set.seed(10)
 
 # Train model with grid search
 nnet_optimal <- train(
@@ -986,7 +1075,9 @@ nnet_optimal <- train(
 
 # Stop parallel processing
 stopCluster(cl)
+```
 
+```{r nn-opt-predict, echo=FALSE}
 # Make predictions with optimal model
 train_pred_prob <- predict(nnet_optimal, X_train_scaled, type = "prob")[,"Joe_Biden"]
 test_pred_prob <- predict(nnet_optimal, X_test_scaled, type = "prob")[,"Joe_Biden"]
@@ -994,25 +1085,27 @@ test_pred_prob <- predict(nnet_optimal, X_test_scaled, type = "prob")[,"Joe_Bide
 # Calculate error rates
 train_pred <- ifelse(train_pred_prob > 0.5, "Joe_Biden", "Donald_Trump")
 test_pred <- ifelse(test_pred_prob > 0.5, "Joe_Biden", "Donald_Trump")
-```
 
-```{r echo=FALSE}
-# Plot tuning results
-plot(nnet_optimal)
-```
-
-```{r echo=FALSE}
 # Storing Error Rates
 a <- calc_error_rate(as.factor(train_pred), election.tr$candidate)
 b <- calc_error_rate(as.factor(test_pred), election.te$candidate)
 records[6,] <- c(a,b)
+```
 
+```{r nn-opt-plot, echo=FALSE}
+# Plot tuning results
+plot(nnet_optimal)
+```
+
+
+```{r nn-opt-roc-analysis-setup, echo=FALSE}
 
 roc_pred_opt <- prediction(
     predictions = test_pred_prob,
     labels = factor(election.te$candidate, levels = c("Donald_Trump", "Joe_Biden"))
 )
 
+# Calculate ROC curve coordinates (TPR vs FPR)
 roc_perf_opt <- performance(roc_pred_opt, measure = "tpr", x.measure = "fpr")
 ```
 
@@ -1041,7 +1134,7 @@ roc_data <- data.frame(
 ggplot(roc_data, aes(x = FPR, y = TPR, color = Model, linetype = Model)) +
   geom_line(linewidth = 1) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
-  scale_color_manual(values = c("purple", "brown4", "cadetblue")) +
+  scale_color_manual(values = c("brown4", "purple", "cadetblue")) +
   labs(title = "ROC Curve Comparison",
        x = "False Positive Rate", # (FPR)
        y = "True Positive Rate", # (TPR)
